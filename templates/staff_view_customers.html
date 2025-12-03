@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">Customers for Flight {{ flight_num }}</h2>
+
+    {% if customers %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in customers %}
+                <tr>
+                    <td>{{ c['name'] }}</td>
+                    <td>{{ c['email'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted">No customers found for this flight.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_view_flights') }}" class="btn btn-secondary">Back to Flights</a>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="card mx-auto shadow p-4 mb-5" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Add New Airplane</h2>
+
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">Airplane ID</label>
+                <input type="text" name="airplane_id" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Number of Seats:</label>
+                <input type="text" name="seats" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary d-grid w-100">Create Flight</button>
+        </form>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

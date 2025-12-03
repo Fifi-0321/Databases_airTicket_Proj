@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Create Flight Form -->
+    <div class="card mx-auto shadow p-4 mb-5" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Create New Flight</h2>
+
+        <form method="post">
+            <!-- Row 1: Flight # and Airplane ID -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Flight Number</label>
+                    <input type="text" name="flight_num" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Airplane ID</label>
+                    <input type="text" name="airplane_id" class="form-control" required>
+                </div>
+            </div>
+
+            <!-- Row 2: Departure Airport and Time -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Departure Airport</label>
+                    <input type="text" name="departure_airport" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Departure Time (YYYY-MM-DD HH:MM:SS)</label>
+                    <input type="text" name="departure_time" class="form-control" required>
+                </div>
+            </div>
+
+            <!-- Row 3: Arrival Airport and Time -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Arrival Airport</label>
+                    <input type="text" name="arrival_airport" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Arrival Time (YYYY-MM-DD HH:MM:SS)</label>
+                    <input type="text" name="arrival_time" class="form-control" required>
+                </div>
+            </div>
+
+            <!-- Row 4: Price and Status -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="form-label">Price</label>
+                    <input type="number" name="price" class="form-control" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-select" required>
+                        <option value="upcoming">upcoming</option>
+                        <option value="in progress">in progress</option>
+                        <option value="delayed">delayed</option>
+                        <option value="cancelled">cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary d-grid w-100">Create Flight</button>
+        </form>
+    </div>
+
+    <!-- Upcoming Flights Table -->
+    <h3>Upcoming Flights (Next 30 Days)</h3>
+    {% if flights %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Flight #</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Time</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                <tr>
+                    <td>{{ flight[1] }}</td>
+                    <td>{{ flight[2] }} ({{ flight[3] }})</td>
+                    <td>{{ flight[4] }} ({{ flight[5] }})</td>
+                    <td>{{ flight[3] }} → {{ flight[5] }}</td>
+                    <td>{{ flight[7] }}</td>
+                    <td>${{ flight[6] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-muted mt-4">No upcoming flights found.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

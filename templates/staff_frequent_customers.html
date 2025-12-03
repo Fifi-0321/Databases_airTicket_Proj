@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Most Frequent Customers section outside of the card -->
+    <h2 class="text-center mb-4">Most Frequent Customers (Past Year)</h2>
+
+    {% if top_customers %}
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Email</th>
+                    <th>Tickets Purchased</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in top_customers %}
+                <tr>
+                    <td>{{ c.customer_email }}</td>
+                    <td>{{ c.ticket_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center">No frequent customers found in the past year.</p>
+    {% endif %}
+
+    <hr class="my-5">
+
+    <!-- View Flights for a Customer form inside the card -->
+    <div class="card mx-auto shadow p-4 mb-4" style="max-width: 700px;">
+        <h3 class="text-center mb-4">View Flights for a Customer (of Your Airline)</h3>
+
+        <form method="post" class="row gy-2 gx-3 align-items-center mb-4">
+            <div class="mb-3">
+                <label class="visually-hidden" for="customer_email">Customer Email</label>
+                <input type="email" class="form-control" id="customer_email" name="customer_email" placeholder="Enter customer email" required>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">View Flights</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Flight results outside the card -->
+    {% if customer_flights %}
+    <h4 class="text-center mb-3">Flights for <span class="text-primary">{{ request.form.customer_email }}</span></h4>
+    <div class="table-responsive mt-3">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Flight Number</th>
+                    <th>Departure</th>
+                    <th>Arrival</th>
+                    <th>Times</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in customer_flights %}
+                <tr>
+                    <td>{{ f.flight_num }}</td>
+                    <td>{{ f.departure_airport }}</td>
+                    <td>{{ f.arrival_airport }}</td>
+                    <td>{{ f.departure_time }} → {{ f.arrival_time }}</td>
+                    <td>{{ f.status }}</td>
+                    <td>${{ "%.2f"|format(f.price) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+    
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

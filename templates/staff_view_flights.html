@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <!-- Flight search form inside card -->
+    <div class="card mx-auto shadow p-4" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Search Flights Operated by Your Airline</h2>
+        
+        <form method="POST" class="mb-5">
+            <!-- Start and End Date in a row -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="start_date" class="form-label">Start Date:</label>
+                    <input type="date" class="form-control" name="start_date" id="start_date">
+                </div>
+                <div class="col-md-6">
+                    <label for="end_date" class="form-label">End Date:</label>
+                    <input type="date" class="form-control" name="end_date" id="end_date">
+                </div>
+            </div>
+
+            <!-- Source and Destination Airport in a row -->
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="source" class="form-label">Source Airport or City:</label>
+                    <input type="text" class="form-control" name="source" id="source">
+                </div>
+                <div class="col-md-6">
+                    <label for="destination" class="form-label">Destination Airport or City:</label>
+                    <input type="text" class="form-control" name="destination" id="destination">
+                </div>
+            </div>
+
+            <!-- Flight Time Filter -->
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <label class="form-label d-block">Flight Time Filter:</label>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="time_filter" value="all" checked>
+                        <label class="form-check-label">All</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="time_filter" value="future">
+                        <label class="form-check-label">Future</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="time_filter" value="past">
+                        <label class="form-check-label">Past</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary d-grid w-100">Search</button>
+        </form>
+    </div>
+
+    <!-- Flight results outside the card -->
+    <h3 class="mt-5">Flights</h3>
+    <p>Total flights: {{ flights|length }}</p>
+
+    {% if flights %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Flight Number</th>
+                    <th>Departure Airport</th>
+                    <th>Departure Time</th>
+                    <th>Arrival Airport</th>
+                    <th>Arrival Time</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Airplane ID</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                <tr>
+                    <td>{{ flight['flight_num'] }}</td>
+                    <td>{{ flight['departure_airport'] }}</td>
+                    <td>{{ flight['departure_time'] }}</td>
+                    <td>{{ flight['arrival_airport'] }}</td>
+                    <td>{{ flight['arrival_time'] }}</td>
+                    <td>${{ "%.2f"|format(flight['price']) }}</td>
+                    <td>{{ flight['status'] }}</td>
+                    <td>{{ flight['airplane_id'] }}</td>
+                    <td>
+                        <a href="{{ url_for('staff_view_customers', airline=flight['airline_name'], flight_num=flight['flight_num']) }}"
+                           class="btn btn-sm btn-info">View Customers</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+        <p class="text-muted mt-4">No flights found matching your criteria.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+
+

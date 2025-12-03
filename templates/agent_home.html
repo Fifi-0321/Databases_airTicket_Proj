@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card mx-auto shadow-lg p-5 rounded-4" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Welcome, Booking Agent {{ session['email'] }}</h2>
+
+        <div class="list-group">
+            <a href="{{ url_for('search_flights') }}" class="list-group-item list-group-item-action text-center fs-5">
+                Search Flights
+            </a>
+            <a href="{{ url_for('view_agent_flights') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View Customer Flights
+            </a>
+            <a href="{{ url_for('agent_commission') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View My Commission
+            </a>
+            <a href="{{ url_for('view_top_customers') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View Top Customers
+            </a>
+            <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-center fs-5 text-danger">
+                Logout
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

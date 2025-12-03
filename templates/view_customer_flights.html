@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4 rounded-4 mx-auto" style="max-width: 900px;">
+        <h2 class="text-center mb-4">My Flights</h2>
+
+        {% if flights %}
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Flight Number</th>
+                            <th>Airline</th>
+                            <th>Departure Time</th>
+                            <th>Arrival Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for flight in flights %}
+                        <tr>
+                            <td>{{ flight['flight_num'] }}</td>
+                            <td>{{ flight['airline_name'] }}</td>
+                            <td>{{ flight['departure_time'].strftime('%Y-%m-%d %H:%M') if flight['departure_time'] else 'N/A' }}</td>
+                            <td>{{ flight['arrival_time'].strftime('%Y-%m-%d %H:%M') if flight['arrival_time'] else 'N/A' }}</td>
+                            <td>{{ flight['status'] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info text-center">No flights found.</div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('customer_home') }}" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

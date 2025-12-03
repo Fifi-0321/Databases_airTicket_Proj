@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card mx-auto shadow p-5 rounded-4" style="max-width: 900px;">
+        <h2 class="text-center mb-4">My Spending Report</h2>
+
+        <!-- Date range filter form -->
+        <form method="post">
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date }}">
+                </div>
+            </div>
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Update Report</button>
+            </div>
+        </form>
+
+        <hr class="my-4">
+
+        <!-- Total spending summary -->
+        <p><strong>Total Spending:</strong> ${{ total_spent }}</p>
+
+        <!-- Monthly spending table -->
+        <h4 class="mt-4">Monthly Spending</h4>
+        {% if monthly_spending %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Month</th>
+                        <th>Amount Spent ($)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in monthly_spending %}
+                    <tr>
+                        <td>{{ row['month'] }}</td>
+                        <td>{{ row['total'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+            <p class="text-muted">No spending in this range.</p>
+        {% endif %}
+
+        <!-- Bar chart of monthly spending -->
+        {% if chart_url %}
+        <div class="text-center mt-5">
+            <h5>Spending Chart</h5>
+            <img src="data:image/png;base64,{{ chart_url }}" alt="Monthly Spending Chart" class="img-fluid rounded shadow-sm" style="max-width: 100%;">
+        </div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('customer_home') }}" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

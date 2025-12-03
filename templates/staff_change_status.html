@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto shadow p-4" style="max-width: 900px;">
+    <h2 class="text-center mb-4">Update Flight Status</h2>
+
+    <form method="post">
+        <div class="mb-3">
+            <label for="flight_num" class="form-label">Select a Flight</label>
+            <select class="form-select" name="flight_num" id="flight_num" required>
+                {% for flight in flights %}
+                <option value="{{ flight[0] }}">
+                    Flight {{ flight[0] }} | {{ flight[1] }} → {{ flight[2] }} | Departs: {{ flight[3] }} | Status: {{ flight[5] }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="new_status" class="form-label">New Status</label>
+            <select class="form-select" name="new_status" id="new_status" required>
+                <option value="upcoming">Upcoming</option>
+                <option value="in progress">In Progress</option>
+                <option value="delayed">Delayed</option>
+                <option value="cancelled">Cancelled</option>
+                <option value="landed">Landed</option>
+            </select>
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Update Status</button>
+        </div>
+    </form>
+</div>
+
+<div class="mt-4 text-center">
+    <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Staff Home</a>
+</div>
+{% endblock %}

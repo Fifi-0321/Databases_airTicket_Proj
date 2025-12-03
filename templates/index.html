@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="text-center mt-5">
+    <h2 class="mb-4">Welcome to the Air Ticket Reservation System!</h2>
+
+    <div class="d-grid gap-3 col-6 mx-auto">
+        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-success btn-lg">Register</a>
+        <a href="{{ url_for('search_flights') }}" class="btn btn-outline-info btn-lg">Search Flights (Public)</a>
+        <a href="{{ url_for('check_flight_status') }}" class="btn btn-outline-info btn-lg">
+            Check Flight Status (Public)
+        </a>
+    </div>
+</div>
+{% endblock %}

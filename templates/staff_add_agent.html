@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <div class="card mx-auto shadow p-4 mb-5" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Add Agent</h2>
+
+        <form method="post">
+            <div class="mb-3">
+                <label class="form-label">Agent Email:</label>
+                <input type="text" name="email" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary d-grid w-100">Confirm</button>
+        </form>
+    </div>
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+
+{% endblock %}

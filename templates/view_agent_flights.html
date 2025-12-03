@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4 mb-4">
+        <h2 class="text-center mb-3">Flights Sold by You</h2>
+
+        <!-- Filter Form -->
+        <form method="POST" class="row g-3 mb-4">
+            <div class="col-md-3">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-3">
+                <label for="source" class="form-label">Source Airport/City</label>
+                <input type="text" name="source" id="source" class="form-control" value="{{ source }}">
+            </div>
+            <div class="col-md-3">
+                <label for="destination" class="form-label">Destination Airport/City</label>
+                <input type="text" name="destination" id="destination" class="form-control" value="{{ destination }}">
+            </div>
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary">Filter Flights</button>
+            </div>
+        </form>
+    </div>
+
+    {% if flights %}
+    <div class="card shadow p-4">
+        <h5>Results:</h5>
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Flight Number</th>
+                        <th>Airline</th>
+                        <th>Departure Time</th>
+                        <th>Arrival Time</th>
+                        <th>Source</th>
+                        <th>Destination</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flight in flights %}
+                    <tr>
+                        <td>{{ flight['flight_num'] }}</td>
+                        <td>{{ flight['airline_name'] }}</td>
+                        <td>{{ flight['departure_time'] }}</td>
+                        <td>{{ flight['arrival_time'] }}</td>
+                        <td>{{ flight['departure_airport'] }}</td>
+                        <td>{{ flight['arrival_airport'] }}</td>
+                        <td>{{ flight['status'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+        <p class="text-center text-muted mt-4">No flights found for your criteria.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('agent_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

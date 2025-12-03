@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <!-- Top Destination -->
+    <h2 class="text-center mb-4"> Top 3 Most Popular Destinations for Last 3 Months</h2>
+
+    {% if top_destinations_last3months %}
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>City</th>
+                    <th>Numbers of Flights</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in top_destinations_last3months %}
+                <tr>
+                    <td>{{ d.airport_city }}</td>
+                    <td>{{ d.destination_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center">No frequent customers found in last 3 months.</p>
+    {% endif %}
+
+    <h2 class="text-center mb-4"> Top 3 Most Popular Destinations for Last Year</h2>
+
+    {% if top_destinations_lastyear %}
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>City</th>
+                    <th>Numbers of Flights</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in top_destinations_lastyear %}
+                <tr>
+                    <td>{{ d.airport_city }}</td>
+                    <td>{{ d.destination_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="text-muted text-center">No frequent customers found in the past year.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

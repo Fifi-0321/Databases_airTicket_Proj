@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+
+    <h2 class="text-center mb-4">Top 5 Customers by Tickets Purchased (Last 6 Months)</h2>
+    {% if top_customers_tickets %}
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Email</th>
+                    <th>Tickets Purchased</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in top_customers_tickets %}
+                <tr>
+                    <td>{{ customer.customer_email }}</td>
+                    <td>{{ customer.ticket_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mb-5">
+        <img src="data:image/png;base64,{{ ticket_chart }}" alt="Ticket Chart" class="img-fluid rounded shadow-sm"/>
+    </div>
+    {% else %}
+    <p class="text-muted text-center">No data available for tickets bought in the last 6 months.</p>
+    {% endif %}
+
+    <h2 class="text-center mb-4">Top 5 Customers by Commission Earned (Last Year)</h2>
+    {% if top_customers_commission %}
+    <div class="table-responsive mb-4">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Email</th>
+                    <th>Total Commission (CNY)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in top_customers_commission %}
+                <tr>
+                    <td>{{ customer.customer_email }}</td>
+                    <td>{{ customer.total_commission }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="text-center mb-5">
+        <img src="data:image/png;base64,{{ commission_chart }}" alt="Commission Chart" class="img-fluid rounded shadow-sm"/>
+    </div>
+    {% else %}
+    <p class="text-muted text-center">No data available for commission in the last year.</p>
+    {% endif %}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('agent_home') }}" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+{% endblock %}
+
+

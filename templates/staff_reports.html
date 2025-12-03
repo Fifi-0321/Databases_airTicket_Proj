@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4 rounded-4">
+        <h2 class="text-center mb-4">Monthly Report from {{ start_date }} to {{ end_date }}</h2>
+
+        <!-- Optional Preset Buttons -->
+        <div class="text-center mb-4">
+            <a href="{{ url_for('staff_reports') }}?preset=last30" class="btn btn-outline-primary btn-sm">Last 30 Days</a>
+            <a href="{{ url_for('staff_reports') }}?preset=last_year" class="btn btn-outline-secondary btn-sm">Last Year</a>
+        </div>
+
+        <!-- Date Range Filter Form -->
+        <form method="POST" class="row g-3 mb-4">
+            <div class="col-md-5">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-5">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        <!-- Total Tickets Sold Section -->
+        <ul class="list-group mb-4">
+            <li class="list-group-item d-flex justify-content-between">
+                <span><strong>Total Tickets Sold</strong></span>
+                <span>{{ total_tickets }} ticket(s)</span>
+            </li>
+        </ul>
+
+        <!-- Monthly Ticket Sales Section -->
+        {% if months %}
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <h3>Monthly Ticket Sales</h3>
+                <div class="text-center mb-4">
+                    <img src="data:image/png;base64,{{ chart_url }}" 
+                         alt="Monthly Ticket Sales Bar Chart"
+                         class="img-fluid rounded shadow-sm"
+                         style="max-width: 100%; height: auto;">
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-info text-center">
+            No data available for the selected period.
+        </div>
+        {% endif %}
+
+        <!-- Back Button -->
+        <div class="text-center mt-4">
+            <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

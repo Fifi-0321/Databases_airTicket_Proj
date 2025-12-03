@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card mx-auto shadow p-4" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Commission Report</h2>
+
+        <!-- Date Range Filter Form -->
+        <form method="POST" class="row g-3 mb-4">
+            <div class="col-md-5">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" name="start_date" id="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-5">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" name="end_date" id="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+
+        <h5 class="text-center mb-3">From {{ start_date }} to {{ end_date }}</h5>
+
+        <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item d-flex justify-content-between">
+                <strong>Total Commission Earned:</strong>
+                <span>${{ total_commission }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+                <strong>Average Commission per Ticket:</strong>
+                <span>${{ avg_commission }}</span>
+            </li>
+            <li class="list-group-item d-flex justify-content-between">
+                <strong>Total Tickets Sold:</strong>
+                <span>{{ total_tickets }}</span>
+            </li>
+        </ul>
+
+        <div class="text-center">
+            <a href="{{ url_for('agent_home') }}" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

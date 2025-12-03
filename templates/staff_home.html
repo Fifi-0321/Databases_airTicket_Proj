@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card mx-auto shadow-lg p-5 rounded-4" style="max-width: 900px;">
+        <h2 class="text-center mb-4">Welcome, Airline Staff {{ session['email'] }}</h2>
+
+        <!-- Optional: Show current permissions for debugging -->
+        <p class="text-center text-muted"><strong>Permissions:</strong> {{ permissions }}</p>
+
+        <div class="list-group">
+            {% if 'Admin' in permissions %}
+                <a href="{{ url_for('staff_add_agent') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    Add Booking Agent
+                </a>
+                <a href="{{ url_for('staff_add_airplane') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    Add New Airplane
+                </a>
+                <a href="{{ url_for('staff_add_airport') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    Add New Airport
+                </a>
+                <a href="{{ url_for('staff_create_flight') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    Create New Flight
+                </a>
+                <a href="{{ url_for('staff_grant_permission') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    Grant Permission
+                </a>
+                <a href="{{ url_for('view_all_agents') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    View All Booking Agents
+                </a>
+            {% endif %}
+
+            {% if 'Operator' in permissions %}
+                <a href="{{ url_for('staff_change_status') }}" class="list-group-item list-group-item-action text-center fs-5">
+                    Change Flight Status
+                </a>
+            {% endif %}
+
+            <a href="{{ url_for('search_flights') }}" class="list-group-item list-group-item-action text-center fs-5">
+                Search Flights
+            </a>
+            <a href="{{ url_for('staff_frequent_customers') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View Frequent Customers
+            </a>
+            <a href="{{ url_for('staff_view_flights') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View My Airline Flights
+            </a>
+            <a href="{{ url_for('staff_reports') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View Reports
+            </a>
+            <a href="{{ url_for('staff_revenue_comparison') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View Revenue Comparison
+            </a>
+            <a href="{{ url_for('staff_top_destinations') }}" class="list-group-item list-group-item-action text-center fs-5">
+                View Top 3 Destinations
+            </a>
+            <a href="{{ url_for('logout') }}" class="list-group-item list-group-item-action text-center fs-5 text-danger">
+                Logout
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

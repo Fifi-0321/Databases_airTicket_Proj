@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card mx-auto shadow p-4" style="max-width: 900px;">
+    <h2 class="text-center mb-4">Search Flights</h2>
+
+    <!-- 🔍 Date range search form -->
+    <form method="post">
+        <div class="mb-3">
+            <label for="source" class="form-label">Source Airport/City</label>
+            <input type="text" class="form-control" id="source" name="source" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="destination" class="form-label">Destination Airport/City</label>
+            <input type="text" class="form-control" id="destination" name="destination" required>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date" class="form-control" id="start_date" name="start_date" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date" class="form-control" id="end_date" name="end_date" required>
+            </div>
+        </div>
+
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </form>
+</div>
+
+{% if flights %}
+<div class="mt-5">
+    <h3>Search Results:</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Flight Number</th>
+                    <th>Airline</th>
+                    <th>Departure Time</th>
+                    <th>Arrival Time</th>
+                    <th>Price</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                <tr>
+                    <td>{{ flight['flight_num'] }}</td>
+                    <td>{{ flight['airline_name'] }}</td>
+                    <td>{{ flight['departure_time'] }}</td>
+                    <td>{{ flight['arrival_time'] }}</td>
+                    <td>${{ flight['price'] }}</td>
+                    <td>
+                        {% if session.get('role') == 'customer' %}
+                            <form method="post" action="{{ url_for('purchase_ticket') }}">
+                                <input type="hidden" name="airline" value="{{ flight['airline_name'] }}">
+                                <input type="hidden" name="flight_num" value="{{ flight['flight_num'] }}">
+                                <button type="submit" class="btn btn-success btn-sm">Purchase</button>
+                            </form>
+                        {% elif session.get('role') == 'agent' %}
+                            <form method="post" action="{{ url_for('purchase_ticket_agent') }}">
+                                <input type="hidden" name="airline" value="{{ flight['airline_name'] }}">
+                                <input type="hidden" name="flight_num" value="{{ flight['flight_num'] }}">
+                                <div class="input-group">
+                                    <input type="email" class="form-control form-control-sm" name="customer_email" placeholder="Customer Email" required>
+                                    <button type="submit" class="btn btn-primary btn-sm">Purchase for Customer</button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <span class="text-muted">Login as customer or agent to purchase</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-4 text-center">
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Back to Home</a>
+</div>
+{% endblock %}
