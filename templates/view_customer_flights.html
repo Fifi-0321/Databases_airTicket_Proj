@@ -1,41 +1,123 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-5">
-    <div class="card shadow p-4 rounded-4 mx-auto" style="max-width: 900px;">
-        <h2 class="text-center mb-4">My Flights</h2>
 
-        {% if flights %}
-            <div class="table-responsive">
-                <table class="table table-bordered table-striped align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Flight Number</th>
-                            <th>Airline</th>
-                            <th>Departure Time</th>
-                            <th>Arrival Time</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for flight in flights %}
-                        <tr>
-                            <td>{{ flight['flight_num'] }}</td>
-                            <td>{{ flight['airline_name'] }}</td>
-                            <td>{{ flight['departure_time'].strftime('%Y-%m-%d %H:%M') if flight['departure_time'] else 'N/A' }}</td>
-                            <td>{{ flight['arrival_time'].strftime('%Y-%m-%d %H:%M') if flight['arrival_time'] else 'N/A' }}</td>
-                            <td>{{ flight['status'] }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+<div class="card mx-auto shadow p-4" style="max-width: 900px; font-size: 0.98rem;">
+    <h2 class="text-center mb-4">My Flights</h2>
+
+    <!-- 🔍 Filters -->
+    <form method="get" action="{{ url_for('view_customer_flights') }}">
+        <!-- 第一行：Show + Date range -->
+        <div class="row align-items-end mb-3">
+            <div class="col-md-4 mb-3 mb-md-0">
+                <label class="form-label d-block mb-1"><strong>Show:</strong></label>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="show" id="showUpcoming"
+                           value="upcoming" {% if show == 'upcoming' %}checked{% endif %}>
+                    <label class="form-check-label" for="showUpcoming">Upcoming</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="show" id="showAll"
+                           value="all" {% if show == 'all' %}checked{% endif %}>
+                    <label class="form-check-label" for="showAll">All</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="radio" name="show" id="showPast"
+                           value="past" {% if show == 'past' %}checked{% endif %}>
+                    <label class="form-check-label" for="showPast">Past</label>
+                </div>
             </div>
-        {% else %}
-            <div class="alert alert-info text-center">No flights found.</div>
-        {% endif %}
 
-        <div class="text-center mt-4">
-            <a href="{{ url_for('customer_home') }}" class="btn btn-secondary">Back to Home</a>
+            <div class="col-md-4 mb-3 mb-md-0">
+                <label for="start_date" class="form-label">Start Date</label>
+                <input type="date"
+                       class="form-control"
+                       id="start_date"
+                       name="start_date"
+                       value="{{ start_date or '' }}">
+            </div>
+
+            <div class="col-md-4">
+                <label for="end_date" class="form-label">End Date</label>
+                <input type="date"
+                       class="form-control"
+                       id="end_date"
+                       name="end_date"
+                       value="{{ end_date or '' }}">
+            </div>
         </div>
+
+        <!-- 第二行：Origin / Destination -->
+        <div class="row mb-3">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <label for="origin" class="form-label">Origin</label>
+                <input type="text"
+                       class="form-control"
+                       id="origin"
+                       name="origin"
+                       placeholder="e.g. JFK"
+                       value="{{ origin or '' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="destination" class="form-label">Destination</label>
+                <input type="text"
+                       class="form-control"
+                       id="destination"
+                       name="destination"
+                       placeholder="e.g. LAX"
+                       value="{{ destination or '' }}">
+            </div>
+        </div>
+
+        <!-- Apply / Reset 按钮，居中 -->
+        <div class="d-flex justify-content-center mb-2">
+            <button type="submit" class="btn btn-primary px-4 me-2">Apply</button>
+            <a href="{{ url_for('view_customer_flights') }}" class="btn btn-link">Reset</a>
+        </div>
+    </form>
+
+    {% if not flights %}
+        <p class="text-muted text-center mb-0 mt-2">No flights found.</p>
+    {% endif %}
+</div>
+
+{% if flights %}
+<div class="mt-4" style="max-width: 900px; margin: 0 auto;">
+    <h5 class="text-center mb-3" style="font-size: 1.15rem;">My Flights List</h5>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Flight Number</th>
+                    <th>Airline</th>
+                    <th>Departure Time</th>
+                    <th>Arrival Time</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for flight in flights %}
+                <tr>
+                    <td>{{ flight['flight_num'] }}</td>
+                    <td>{{ flight['airline_name'] }}</td>
+                    <td>
+                        {{ flight['departure_time'].strftime('%Y-%m-%d %H:%M')
+                           if flight['departure_time'] else 'N/A' }}
+                    </td>
+                    <td>
+                        {{ flight['arrival_time'].strftime('%Y-%m-%d %H:%M')
+                           if flight['arrival_time'] else 'N/A' }}
+                    </td>
+                    <td>{{ flight['status'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
+{% endif %}
+
+<div class="mt-4 text-center">
+    <a href="{{ url_for('customer_home') }}" class="btn btn-secondary">Back to Home</a>
+</div>
+
 {% endblock %}

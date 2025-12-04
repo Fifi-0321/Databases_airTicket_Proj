@@ -435,24 +435,72 @@ def purchase_ticket():
 
 # Customer2 -- Review Purchased Flights:
 # [Revise]: Add on filters(date ranges, origin, and destination)
-@app.route('/view_customer_flights')
+from datetime import datetime
+@app.route('/view_customer_flights', methods=['GET'])
 def view_customer_flights():
-    if 'email' not in session or session['role'] != 'customer':
+    # Ensure user is logged in and is a customer
+    if 'email' not in session or session.get('role') != 'customer':
         return redirect(url_for('login'))
 
+    start_date_str = request.args.get('start_date')      
+    end_date_str = request.args.get('end_date')          
+    origin = request.args.get('origin', '').strip()      
+    destination = request.args.get('destination', '').strip()
+    show = request.args.get('show', '').strip()          
+
     cursor = conn.cursor(dictionary=True)
-    query = """
+
+    base_query = """
         SELECT f.*
         FROM flight f
-        JOIN ticket t ON f.airline_name = t.airline_name AND f.flight_num = t.flight_num
+        JOIN ticket t ON f.airline_name = t.airline_name
+                     AND f.flight_num = t.flight_num
         JOIN purchases p ON t.ticket_id = p.ticket_id
-        WHERE p.customer_email = '{}'
+        WHERE p.customer_email = %s
     """
-    cursor.execute(query.format(session['email']))
+
+    params = [session['email']]
+
+    # Default View: show only upcoming flights
+    if show not in ('all', 'past'):
+        base_query += " AND DATE(f.departure_time) >= CURDATE() "
+    elif show == 'past':
+        base_query += " AND DATE(f.departure_time) < CURDATE() "
+
+    # 1. Optional date range filter:
+    if start_date_str:
+        base_query += " AND DATE(f.departure_time) >= %s "
+        params.append(start_date_str)
+
+    if end_date_str:
+        base_query += " AND DATE(f.departure_time) <= %s "
+        params.append(end_date_str)
+
+    # 2. Optional origin / destination filters:
+    if origin:
+        base_query += " AND f.departure_airport = %s "
+        params.append(origin)
+
+    if destination:
+        base_query += " AND f.arrival_airport = %s "
+        params.append(destination)
+
+    # Sort results: earliest departure time first:
+    base_query += " ORDER BY f.departure_time ASC "
+
+    cursor.execute(base_query, tuple(params))
     flights = cursor.fetchall()
     cursor.close()
 
-    return render_template('view_customer_flights.html', flights=flights)
+    return render_template(
+        'view_customer_flights.html',
+        flights=flights,
+        start_date=start_date_str,
+        end_date=end_date_str,
+        origin=origin,
+        destination=destination,
+        show=show or 'upcoming'
+    )
 
 
 # Customer 3 -- Review spending:
