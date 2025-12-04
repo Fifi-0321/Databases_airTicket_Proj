@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Purchase Authorization</h2>
+
+  {# Warning if the customer has already purchased this flight #}
+  {% if has_purchased %}
+  <div class="alert alert-danger text-center">
+    ⚠️ You have already purchased this flight. Are you sure you want to buy it again?
+  </div>
+  {% endif %}
+
+  <div class="alert alert-warning text-center">
+    Please confirm your purchase by entering your account password.
+  </div>
+
+  <!-- Flight summary -->
+  <div class="card mb-4">
+    <div class="card-header">
+      Flight Summary
+    </div>
+    <div class="card-body">
+      <p><strong>Airline:</strong> {{ flight.airline_name }}</p>
+      <p><strong>Flight #:</strong> {{ flight.flight_num }}</p>
+      <p><strong>From:</strong> {{ flight.departure_airport }}</p>
+      <p><strong>To:</strong> {{ flight.arrival_airport }}</p>
+      <p><strong>Departure Time:</strong> {{ flight.departure_time }}</p>
+      <p><strong>Arrival Time:</strong> {{ flight.arrival_time }}</p>
+      <p><strong>Price:</strong> ${{ flight.price }}</p>
+      <p><strong>Status:</strong> {{ flight.status }}</p>
+    </div>
+  </div>
+
+  <!-- Authorization form -->
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('purchase_ticket') }}">
+        <!-- Keep flight info -->
+        <input type="hidden" name="airline" value="{{ flight.airline_name }}">
+        <input type="hidden" name="flight_num" value="{{ flight.flight_num }}">
+
+        <div class="mb-3">
+          <label for="password" class="form-label">Confirm with your account password</label>
+          <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <a href="{{ url_for('search_flights') }}" class="btn btn-secondary">
+            Cancel and Back to Search
+          </a>
+          <button type="submit" class="btn btn-primary">
+            Confirm Purchase
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,30 +1,15 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: localhost
--- Erstellungszeit: 25. Nov 2025 um 15:59
--- Server-Version: 10.4.28-MariaDB
--- PHP-Version: 8.2.4
-
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
 --
--- Datenbank: `Datenbank-Abschlussprojekt`
+-- DataBase: AirTicketReservationSystem
 --
 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `airline`
+-- Create Table: `airline`
 --
 
 CREATE TABLE `airline` (
@@ -32,7 +17,7 @@ CREATE TABLE `airline` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `airline`
+-- Insert Data: `airline`
 --
 
 INSERT INTO `airline` (`airline_name`) VALUES
@@ -42,7 +27,7 @@ INSERT INTO `airline` (`airline_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `airline_staff`
+-- Create Table: `airline_staff`
 --
 
 CREATE TABLE `airline_staff` (
@@ -55,7 +40,7 @@ CREATE TABLE `airline_staff` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `airline_staff`
+-- Insert Data: `airline_staff`
 --
 
 INSERT INTO `airline_staff` (`username`, `password`, `first_name`, `last_name`, `date_of_birth`, `airline_name`) VALUES
@@ -67,7 +52,7 @@ INSERT INTO `airline_staff` (`username`, `password`, `first_name`, `last_name`, 
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `airplane`
+-- Create Table: `airplane`
 --
 
 CREATE TABLE `airplane` (
@@ -77,7 +62,7 @@ CREATE TABLE `airplane` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `airplane`
+-- Insert Data: `airplane`
 --
 
 INSERT INTO `airplane` (`airline_name`, `airplane_id`, `seats`) VALUES
@@ -91,7 +76,7 @@ INSERT INTO `airplane` (`airline_name`, `airplane_id`, `seats`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `airport`
+-- Create Table: `airport`
 --
 
 CREATE TABLE `airport` (
@@ -100,7 +85,7 @@ CREATE TABLE `airport` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `airport`
+-- Insert Data: `airport`
 --
 
 INSERT INTO `airport` (`airport_name`, `airport_city`) VALUES
@@ -115,7 +100,7 @@ INSERT INTO `airport` (`airport_name`, `airport_city`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `booking_agent`
+-- Create Table: `booking_agent`
 --
 
 CREATE TABLE `booking_agent` (
@@ -125,7 +110,7 @@ CREATE TABLE `booking_agent` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `booking_agent`
+-- Insert Data: `booking_agent`
 --
 
 INSERT INTO `booking_agent` (`email`, `password`, `booking_agent_id`) VALUES
@@ -134,7 +119,7 @@ INSERT INTO `booking_agent` (`email`, `password`, `booking_agent_id`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `booking_agent_work_for`
+-- Create Table: `booking_agent_work_for`
 --
 
 CREATE TABLE `booking_agent_work_for` (
@@ -143,7 +128,7 @@ CREATE TABLE `booking_agent_work_for` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `booking_agent_work_for`
+-- Insert Data: `booking_agent_work_for`
 --
 
 INSERT INTO `booking_agent_work_for` (`email`, `airline_name`) VALUES
@@ -153,7 +138,7 @@ INSERT INTO `booking_agent_work_for` (`email`, `airline_name`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `customer`
+-- Create Table: `customer`
 --
 
 CREATE TABLE `customer` (
@@ -172,7 +157,7 @@ CREATE TABLE `customer` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `customer`
+-- Insert Data: `customer`
 --
 
 INSERT INTO `customer` (`email`, `name`, `password`, `building_number`, `street`, `city`, `state`, `phone_number`, `passport_number`, `passport_expiration`, `passport_country`, `date_of_birth`) VALUES
@@ -183,7 +168,7 @@ INSERT INTO `customer` (`email`, `name`, `password`, `building_number`, `street`
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `flight`
+-- Create Table: `flight`
 --
 
 CREATE TABLE `flight` (
@@ -199,12 +184,12 @@ CREATE TABLE `flight` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `flight`
+-- Insert Data: `flight`
 --
 
 INSERT INTO `flight` (`airline_name`, `flight_num`, `departure_airport`, `departure_time`, `arrival_airport`, `arrival_time`, `price`, `status`, `airplane_id`) VALUES
-('CEAir', 129, 'PVG', '2025-06-13 00:05:00', 'FRA', '2025-06-13 12:05:00', 5050, 'Upcoming', 1234),
-('CEAir', 1234, 'PVG', '2025-05-10 10:00:00', 'PEK', '2025-05-10 12:30:00', 800, 'Upcoming', 1),
+('CEAir', 129, 'PVG', '2025-06-13 00:05:00', 'FRA', '2025-06-13 12:05:00', 5050, 'upcoming', 1234),
+('CEAir', 1234, 'PVG', '2025-05-10 10:00:00', 'PEK', '2025-05-10 12:30:00', 800, 'upcoming', 1),
 ('Lufthansa', 321, 'PVG', '2025-07-11 10:00:00', 'MUC', '2025-07-11 22:00:00', 15000, 'upcoming', 909),
 ('Lufthansa', 510, 'PVG', '2025-08-13 15:00:00', 'FRA', '2025-08-13 20:05:00', 4999, 'upcoming', 101),
 ('Lufthansa', 517, 'FRA', '2025-05-17 07:45:00', 'BER', '2025-05-17 09:45:00', 400, 'upcoming', 888),
@@ -214,7 +199,7 @@ INSERT INTO `flight` (`airline_name`, `flight_num`, `departure_airport`, `depart
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `permission`
+-- Create Table: `permission`
 --
 
 CREATE TABLE `permission` (
@@ -223,7 +208,7 @@ CREATE TABLE `permission` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `permission`
+-- Insert Data: `permission`
 --
 
 INSERT INTO `permission` (`username`, `permission_type`) VALUES
@@ -235,7 +220,7 @@ INSERT INTO `permission` (`username`, `permission_type`) VALUES
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `purchases`
+-- Create Table: `purchases`
 --
 
 CREATE TABLE `purchases` (
@@ -246,7 +231,7 @@ CREATE TABLE `purchases` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `purchases`
+-- Insert Data: `purchases`
 --
 
 INSERT INTO `purchases` (`ticket_id`, `customer_email`, `booking_agent_id`, `purchase_date`) VALUES
@@ -267,7 +252,7 @@ INSERT INTO `purchases` (`ticket_id`, `customer_email`, `booking_agent_id`, `pur
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `ticket`
+-- Create Table: `ticket`
 --
 
 CREATE TABLE `ticket` (
@@ -277,7 +262,7 @@ CREATE TABLE `ticket` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Daten für Tabelle `ticket`
+-- Insert Data: `ticket`
 --
 
 INSERT INTO `ticket` (`ticket_id`, `airline_name`, `flight_num`) VALUES
@@ -303,55 +288,55 @@ INSERT INTO `ticket` (`ticket_id`, `airline_name`, `flight_num`) VALUES
 (13, 'Lufthansa', 902);
 
 --
--- Indizes der exportierten Tabellen
+-- Export the index of the table
 --
 
 --
--- Indizes für die Tabelle `airline`
+-- Table index: `airline`
 --
 ALTER TABLE `airline`
   ADD PRIMARY KEY (`airline_name`);
 
 --
--- Indizes für die Tabelle `airline_staff`
+-- Table index: `airline_staff`
 --
 ALTER TABLE `airline_staff`
   ADD PRIMARY KEY (`username`),
   ADD KEY `airline_name` (`airline_name`);
 
 --
--- Indizes für die Tabelle `airplane`
+-- Table index: `airplane`
 --
 ALTER TABLE `airplane`
   ADD PRIMARY KEY (`airline_name`,`airplane_id`);
 
 --
--- Indizes für die Tabelle `airport`
+-- Table index: `airport`
 --
 ALTER TABLE `airport`
   ADD PRIMARY KEY (`airport_name`);
 
 --
--- Indizes für die Tabelle `booking_agent`
+-- Table index: `booking_agent`
 --
 ALTER TABLE `booking_agent`
   ADD PRIMARY KEY (`email`);
 
 --
--- Indizes für die Tabelle `booking_agent_work_for`
+-- Table index: `booking_agent_work_for`
 --
 ALTER TABLE `booking_agent_work_for`
   ADD PRIMARY KEY (`email`,`airline_name`),
   ADD KEY `airline_name` (`airline_name`);
 
 --
--- Indizes für die Tabelle `customer`
+-- Table index: `customer`
 --
 ALTER TABLE `customer`
   ADD PRIMARY KEY (`email`);
 
 --
--- Indizes für die Tabelle `flight`
+-- Table index: `flight`
 --
 ALTER TABLE `flight`
   ADD PRIMARY KEY (`airline_name`,`flight_num`),
@@ -360,50 +345,50 @@ ALTER TABLE `flight`
   ADD KEY `arrival_airport` (`arrival_airport`);
 
 --
--- Indizes für die Tabelle `permission`
+-- Table index: `permission`
 --
 ALTER TABLE `permission`
   ADD PRIMARY KEY (`username`,`permission_type`);
 
 --
--- Indizes für die Tabelle `purchases`
+-- Table index: `purchases`
 --
 ALTER TABLE `purchases`
   ADD PRIMARY KEY (`ticket_id`,`customer_email`),
   ADD KEY `customer_email` (`customer_email`);
 
 --
--- Indizes für die Tabelle `ticket`
+-- Table index: `ticket`
 --
 ALTER TABLE `ticket`
   ADD PRIMARY KEY (`ticket_id`),
   ADD KEY `airline_name` (`airline_name`,`flight_num`);
 
 --
--- Constraints der exportierten Tabellen
+-- Export the constraints of the table
 --
 
 --
--- Constraints der Tabelle `airline_staff`
+-- Table constraint: `airline_staff`
 --
 ALTER TABLE `airline_staff`
   ADD CONSTRAINT `airline_staff_ibfk_1` FOREIGN KEY (`airline_name`) REFERENCES `airline` (`airline_name`);
 
 --
--- Constraints der Tabelle `airplane`
+-- Table constraint: `airplane`
 --
 ALTER TABLE `airplane`
   ADD CONSTRAINT `airplane_ibfk_1` FOREIGN KEY (`airline_name`) REFERENCES `airline` (`airline_name`);
 
 --
--- Constraints der Tabelle `booking_agent_work_for`
+-- Table constraint: `booking_agent_work_for`
 --
 ALTER TABLE `booking_agent_work_for`
   ADD CONSTRAINT `booking_agent_work_for_ibfk_1` FOREIGN KEY (`email`) REFERENCES `booking_agent` (`email`),
   ADD CONSTRAINT `booking_agent_work_for_ibfk_2` FOREIGN KEY (`airline_name`) REFERENCES `airline` (`airline_name`);
 
 --
--- Constraints der Tabelle `flight`
+-- Table constraint: `flight`
 --
 ALTER TABLE `flight`
   ADD CONSTRAINT `flight_ibfk_1` FOREIGN KEY (`airline_name`,`airplane_id`) REFERENCES `airplane` (`airline_name`, `airplane_id`),
@@ -411,25 +396,22 @@ ALTER TABLE `flight`
   ADD CONSTRAINT `flight_ibfk_3` FOREIGN KEY (`arrival_airport`) REFERENCES `airport` (`airport_name`);
 
 --
--- Constraints der Tabelle `permission`
+-- Table constraint: `permission`
 --
 ALTER TABLE `permission`
   ADD CONSTRAINT `permission_ibfk_1` FOREIGN KEY (`username`) REFERENCES `airline_staff` (`username`);
 
 --
--- Constraints der Tabelle `purchases`
+-- Table constraint: `purchases`
 --
 ALTER TABLE `purchases`
   ADD CONSTRAINT `purchases_ibfk_1` FOREIGN KEY (`ticket_id`) REFERENCES `ticket` (`ticket_id`),
   ADD CONSTRAINT `purchases_ibfk_2` FOREIGN KEY (`customer_email`) REFERENCES `customer` (`email`);
 
 --
--- Constraints der Tabelle `ticket`
+-- Table constraint: `ticket`
 --
 ALTER TABLE `ticket`
   ADD CONSTRAINT `ticket_ibfk_1` FOREIGN KEY (`airline_name`,`flight_num`) REFERENCES `flight` (`airline_name`, `flight_num`);
 COMMIT;
 
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

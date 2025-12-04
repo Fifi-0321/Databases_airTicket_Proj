@@ -57,10 +57,12 @@
                     <td>${{ flight['price'] }}</td>
                     <td>
                         {% if session.get('role') == 'customer' %}
-                            <form method="post" action="{{ url_for('purchase_ticket') }}">
+                            <form method="POST" action="{{ url_for('purchase_authorization') }}">
                                 <input type="hidden" name="airline" value="{{ flight['airline_name'] }}">
                                 <input type="hidden" name="flight_num" value="{{ flight['flight_num'] }}">
-                                <button type="submit" class="btn btn-success btn-sm">Purchase</button>
+                                <button type="submit">
+                                    Purchase
+                                </button>
                             </form>
                         {% elif session.get('role') == 'agent' %}
                             <form method="post" action="{{ url_for('purchase_ticket_agent') }}">

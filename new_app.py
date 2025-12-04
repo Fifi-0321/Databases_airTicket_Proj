@@ -303,19 +303,89 @@ def check_flight_status():
 # Customer Part:
 
 # Customer1 -- Search for flights and Purchase tickets:
-# [Revise]: 新增purchase_authorization界面/步骤
+# [New]: Add `purchase_authorization` page to let customer double-check and confirm purchase
+@app.route('/purchase_authorization', methods=['POST'])
+def purchase_authorization():
+    if 'email' not in session or session['role'] != 'customer':
+        return redirect(url_for('login'))
+
+    airline = request.form.get('airline')
+    flight_num = request.form.get('flight_num')
+
+    if not airline or not flight_num:
+        flash("Missing flight information.")
+        return redirect(url_for('search_flights'))
+
+    cursor = conn.cursor(dictionary=True)
+
+    # Step 1: Search for flight information
+    cursor.execute("""
+        SELECT f.airline_name, f.flight_num, f.departure_airport, f.arrival_airport,
+               f.departure_time, f.arrival_time, f.price, f.status
+        FROM flight f
+        WHERE f.airline_name = %s AND f.flight_num = %s
+    """, (airline, flight_num))
+    flight = cursor.fetchone()
+
+    if not flight:
+        cursor.close()
+        flash("Flight not found.")
+        return redirect(url_for('search_flights'))
+
+    # Step 2: Check whether Repeat Purchase
+    cursor.execute("""
+        SELECT COUNT(*) AS cnt
+        FROM ticket t
+        JOIN purchases p ON t.ticket_id = p.ticket_id
+        WHERE t.airline_name = %s
+          AND t.flight_num = %s
+          AND p.customer_email = %s
+    """, (airline, flight_num, session['email']))
+    row = cursor.fetchone()
+
+    # Close uniformly as all queries have been completed:
+    cursor.close()
+
+    has_purchased = row['cnt'] > 0 if row else False
+
+    return render_template(
+        'purchase_authorization.html',
+        flight=flight,
+        has_purchased=has_purchased
+    )
+
+
 @app.route('/purchase_ticket', methods=['POST'])
 def purchase_ticket():
     if 'email' not in session or session['role'] != 'customer':
         return redirect(url_for('login'))
 
-    # Share the same search page with the public and get search result from "search_flights":
+    # Step0: Search for flights - share the same page with the public and get search result from "search_flights":
     airline = request.form.get('airline')
     flight_num = request.form.get('flight_num')
+    password = request.form.get('password')
 
     cursor = conn.cursor()
 
-    # Step 1: Check if the flight is sold out
+    # [New] Step 1: verify customer password again (purchase authorization)
+    cursor.execute("SELECT password FROM customer WHERE email = %s", (session['email'],))
+    row = cursor.fetchone()
+    if not row:
+        cursor.close()
+        flash("User not found.")
+        return redirect(url_for('login'))
+
+    stored_hash = row[0]
+
+    input_hash = hashlib.md5(password.encode()).hexdigest() if password else None
+
+    # If wrong password - fail to purchase and back to the search page:
+    if not password or input_hash != stored_hash:
+        cursor.close()
+        flash("Purchase authorization failed: incorrect password!")
+        return redirect(url_for('search_flights'))
+
+    # Step 2: Check if the flight is sold out
     cursor.execute("""
         SELECT a.seats
         FROM flight f JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id
@@ -340,16 +410,16 @@ def purchase_ticket():
         cursor.close()
         return redirect(url_for('purchase_ticket'))
 
-    # Step 2: Create new ticket (generate ticket_id)
+    # Step 3: Create new ticket (generate ticket_id)
     cursor.execute("SELECT MAX(ticket_id) FROM ticket")
     max_id = cursor.fetchone()[0]
     ticket_id = 1 if max_id is None else max_id + 1
 
-    # Step 3: Insert new ticket
+    # Step 4: Insert new ticket
     insert_ticket = "INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)"
     cursor.execute(insert_ticket, (ticket_id, airline, flight_num))
 
-    # Step 4: Insert into purchases
+    # Step 5: Insert into purchases
     insert_purchase = """
         INSERT INTO purchases (ticket_id, customer_email, purchase_date)
         VALUES (%s, %s, CURDATE())
@@ -363,8 +433,8 @@ def purchase_ticket():
     return redirect(url_for('customer_home'))
 
 
-# Customer1 -- Review Purchased Flights:
-# [Revise]: Add on filters
+# Customer2 -- Review Purchased Flights:
+# [Revise]: Add on filters(date ranges, origin, and destination)
 @app.route('/view_customer_flights')
 def view_customer_flights():
     if 'email' not in session or session['role'] != 'customer':
@@ -386,7 +456,7 @@ def view_customer_flights():
 
 
 # Customer 3 -- Review spending:
-# [Revise]: Default vs Custom Checking
+# [Revise]: Default showing the monthly spending in last 12 months and bar chart for last 6 months
 @app.route('/customer_spending', methods=['GET', 'POST'])
 def customer_spending():
     if 'email' not in session or session['role'] != 'customer':
