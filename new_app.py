@@ -263,7 +263,6 @@ def search_flights():
 
 
 # [NEW] Public Lookup of Flight Status:
-# [html: 更改三个status的标签颜色：红绿蓝]
 @app.route('/check_flight_status', methods=['GET', 'POST'])
 def check_flight_status():
     flight_info = None
@@ -277,7 +276,7 @@ def check_flight_status():
             error = "Airline and flight number are required."
         else:
             cursor = conn.cursor(dictionary=True)
-            # [NEW] 默认只查 in progress 的航班；如课程允许，也可放宽为所有状态
+            # [NEW] 默认只查 in progress 的航班；
             query = """
                 SELECT airline_name, flight_num, departure_airport, arrival_airport,
                        departure_time, arrival_time, status
