@@ -276,7 +276,7 @@ def check_flight_status():
             error = "Airline and flight number are required."
         else:
             cursor = conn.cursor(dictionary=True)
-            # [NEW] 默认只查 in progress 的航班；
+            # Search for Upcoming flights in default:
             query = """
                 SELECT airline_name, flight_num, departure_airport, arrival_airport,
                        departure_time, arrival_time, status
@@ -504,6 +504,10 @@ def view_customer_flights():
 
 # Customer 3 -- Review spending:
 # [Revise]: Default showing the monthly spending in last 12 months and bar chart for last 6 months
+from datetime import date, timedelta
+import io, base64
+import matplotlib.pyplot as plt
+
 @app.route('/customer_spending', methods=['GET', 'POST'])
 def customer_spending():
     if 'email' not in session or session['role'] != 'customer':
@@ -511,44 +515,71 @@ def customer_spending():
 
     cursor = conn.cursor(dictionary=True)
 
-    start_date = request.form.get('start_date')
-    end_date = request.form.get('end_date')
+    today = date.today() # Keep track of the current date
+    default_start = today - timedelta(days=365)
+    default_end = today
 
-    if not start_date or start_date.strip() == '':
-        start_date = '2000-01-01'
-    if not end_date or end_date.strip() == '':
-        end_date = '2099-12-31'
+    if request.method == 'POST':
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
 
+        if not start_date or start_date.strip() == '':
+            start_date = default_start.strftime('%Y-%m-%d')
+        if not end_date or end_date.strip() == '':
+            end_date = default_end.strftime('%Y-%m-%d')
+
+        use_last_six_for_chart = False
+    else:
+        start_date = default_start.strftime('%Y-%m-%d')
+        end_date = default_end.strftime('%Y-%m-%d')
+        use_last_six_for_chart = True
+
+    # Total spending:
     total_query = """
-        SELECT SUM(price) AS total_spent
+        SELECT SUM(f.price) AS total_spent
         FROM purchases p
-        JOIN ticket t ON p.ticket_id = t.ticket_id
-        JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
+        JOIN ticket t
+            ON p.ticket_id = t.ticket_id
+        JOIN flight f
+            ON t.airline_name = f.airline_name
+           AND t.flight_num   = f.flight_num
         WHERE p.customer_email = %s
-        AND p.purchase_date BETWEEN %s AND %s
+          AND p.purchase_date BETWEEN %s AND %s
     """
     cursor.execute(total_query, (session['email'], start_date, end_date))
     total_row = cursor.fetchone()
-    total_spent = total_row['total_spent'] if total_row and total_row['total_spent'] else 0
+    total_spent = float(total_row['total_spent']) if total_row and total_row['total_spent'] else 0.0
 
+    # Monthly spending:
     monthly_query = """
-        SELECT DATE_FORMAT(purchase_date, '%Y-%m') AS month, SUM(price) AS total
+        SELECT DATE_FORMAT(p.purchase_date, '%Y-%m') AS month,
+               SUM(f.price) AS total
         FROM purchases p
-        JOIN ticket t ON p.ticket_id = t.ticket_id
-        JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
+        JOIN ticket t
+            ON p.ticket_id = t.ticket_id
+        JOIN flight f
+            ON t.airline_name = f.airline_name
+           AND t.flight_num   = f.flight_num
         WHERE p.customer_email = %s
-        AND p.purchase_date BETWEEN %s AND %s
+          AND p.purchase_date BETWEEN %s AND %s
         GROUP BY month
         ORDER BY month ASC
     """
+
     cursor.execute(monthly_query, (session['email'], start_date, end_date))
     monthly_spending = cursor.fetchall()
 
-    # Generate bar chart:
+
+    # Generate Bar Chart:
     chart_url = None
     if monthly_spending:
-        months = [row['month'] for row in monthly_spending]
-        amounts = [row['total'] for row in monthly_spending]
+        if use_last_six_for_chart and len(monthly_spending) > 6:
+            data_for_chart = monthly_spending[-6:]
+        else:
+            data_for_chart = monthly_spending
+
+        months = [row['month'] for row in data_for_chart]
+        amounts = [row['total'] for row in data_for_chart]
 
         img = io.BytesIO()
         plt.figure(figsize=(10, 6))
@@ -565,16 +596,14 @@ def customer_spending():
 
     cursor.close()
 
-    return render_template('customer_spending.html',
-                           total_spent=total_spent,
-                           monthly_spending=monthly_spending,
-                           start_date=start_date,
-                           end_date=end_date,
-                           chart_url=chart_url)
-
-
-
-
+    return render_template(
+        'customer_spending.html',
+        total_spent=total_spent,
+        monthly_spending=monthly_spending,
+        start_date=start_date,
+        end_date=end_date,
+        chart_url=chart_url
+    )
 
 
 
