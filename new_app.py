@@ -301,10 +301,10 @@ def check_flight_status():
 
 # Customer Part:
 
-# Customer1 -- Search for flights and Purchase tickets:
-# [New]: Add `purchase_authorization` page to let customer double-check and confirm purchase
-@app.route('/purchase_authorization', methods=['POST'])
-def purchase_authorization():
+# Customer 1 -- Search for flights and Purchase tickets:
+# [New]: Add `purchase_authorization_customer` page to let customer double-check and confirm purchase
+@app.route('/purchase_authorization_customer', methods=['POST'])
+def purchase_authorization_customer():
     if 'email' not in session or session['role'] != 'customer':
         return redirect(url_for('login'))
 
@@ -348,7 +348,7 @@ def purchase_authorization():
     has_purchased = row['cnt'] > 0 if row else False
 
     return render_template(
-        'purchase_authorization.html',
+        'purchase_authorization_customer.html',
         flight=flight,
         has_purchased=has_purchased
     )
@@ -432,7 +432,7 @@ def purchase_ticket():
     return redirect(url_for('customer_home'))
 
 
-# Customer2 -- Review Purchased Flights:
+# Customer 2 -- Review Purchased Flights:
 # [Revise]: Add on filters(date ranges, origin, and destination)
 from datetime import datetime
 @app.route('/view_customer_flights', methods=['GET'])
@@ -607,7 +607,92 @@ def customer_spending():
 
 
 
-# Agent1: purchase tickets
+
+
+
+
+
+
+
+
+
+
+# Booking Agent Part:
+
+# Agent 1 -- Search for flights and Purchase tickets:
+# [New]: Add `purchase_authorization_agent` page to let agent double-check and confirm purchase
+@app.route('/purchase_authorization_agent', methods=['POST'])
+def purchase_authorization_agent():
+    if 'email' not in session or session.get('role') != 'agent':
+        return redirect(url_for('login'))
+
+    airline = request.form.get('airline')
+    flight_num = request.form.get('flight_num')
+    customer_email = request.form.get('customer_email')
+
+    if not airline or not flight_num or not customer_email:
+        flash("Missing flight or customer information.")
+        return redirect(url_for('search_flights'))
+
+    cursor = conn.cursor(dictionary=True)
+
+    # Step 1: Check if the agent is working for this airline
+    cursor.execute("""
+        SELECT airline_name
+        FROM booking_agent_work_for
+        WHERE email = %s
+    """, (session['email'],))
+    rows = cursor.fetchall()
+
+    if not rows:
+        cursor.close()
+        flash("You are not currently working for any airline, so you cannot purchase tickets.")
+        return redirect(url_for('search_flights'))
+
+    allowed_airlines = {r['airline_name'] for r in rows}
+    if airline not in allowed_airlines:
+        cursor.close()
+        flash("You do not work for the selected airline.")
+        return redirect(url_for('search_flights'))
+
+    # Step 2: Check flight information (display on confirmation page)
+    cursor.execute("""
+        SELECT f.airline_name, f.flight_num,
+               f.departure_airport, f.arrival_airport,
+               f.departure_time, f.arrival_time,
+               f.price, f.status
+        FROM flight f
+        WHERE f.airline_name = %s AND f.flight_num = %s
+    """, (airline, flight_num))
+    flight = cursor.fetchone()
+
+    if not flight:
+        cursor.close()
+        flash("Flight not found.")
+        return redirect(url_for('search_flights'))
+
+    # Step 3: Check whether this customer has already purchased this flight
+    cursor.execute("""
+        SELECT COUNT(*) AS cnt
+        FROM ticket t
+        JOIN purchases p ON t.ticket_id = p.ticket_id
+        WHERE t.airline_name = %s
+          AND t.flight_num = %s
+          AND p.customer_email = %s
+    """, (airline, flight_num, customer_email))
+    row = cursor.fetchone()
+    cursor.close()
+
+    has_purchased = row['cnt'] > 0 if row else False
+
+    return render_template(
+        'purchase_authorization_agent.html',
+        flight=flight,
+        has_purchased=has_purchased,
+        customer_email=customer_email
+    )
+
+
 @app.route('/purchase_ticket_agent', methods=['GET', 'POST'])
 def purchase_ticket_agent():
     if 'email' not in session or session['role'] != 'agent':
@@ -619,8 +704,28 @@ def purchase_ticket_agent():
     airline = request.form.get('airline')
     flight_num = request.form.get('flight_num')
     customer_email = request.form.get('customer_email')
+    password = request.form.get('password') 
 
     cursor = conn.cursor()
+
+    # Step 0: Verify agent password again (purchase authorization)
+    cursor.execute("""
+        SELECT password
+        FROM booking_agent
+        WHERE email = %s
+    """, (session['email'],))
+    pwd_row = cursor.fetchone()
+    if not pwd_row:
+        cursor.close()
+        flash("Invalid agent account.")
+        return redirect(url_for('login'))
+
+    stored_hash = pwd_row[0]
+    input_hash = hashlib.md5(password.encode()).hexdigest() if password else None
+    if not password or input_hash != stored_hash:
+        cursor.close()
+        flash("Purchase authorization failed: incorrect password!")
+        return redirect(url_for('search_flights'))
 
     # Step 1: Fetch all airlines the agent works for
     cursor.execute("""
@@ -701,7 +806,8 @@ def purchase_ticket_agent():
     return redirect(url_for('agent_home'))
 
 
-# agent1: view my flights
+
+# Agent 2 -- View Purchased flights:
 @app.route('/view_agent_flights', methods=['GET', 'POST'])
 def view_agent_flights():
     if 'email' not in session or session['role'] != 'agent':
@@ -757,7 +863,8 @@ def view_agent_flights():
                            destination=destination)
 
 
-# agent 4: view my commission
+
+# Agent 3 -- View my commission:
 from datetime import datetime, timedelta
 @app.route('/agent_commission', methods=['GET', 'POST'])
 def agent_commission():
@@ -848,7 +955,8 @@ def agent_commission():
                            end_date=end_date)
 
 
-# agent5: view top customers
+
+# Agent 4 -- View Top Customers:
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import io

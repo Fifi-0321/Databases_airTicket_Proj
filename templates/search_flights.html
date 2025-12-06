@@ -57,21 +57,32 @@
                     <td>${{ flight['price'] }}</td>
                     <td>
                         {% if session.get('role') == 'customer' %}
-                            <form method="POST" action="{{ url_for('purchase_authorization') }}">
+                            <form method="POST"
+                                action="{{ url_for('purchase_authorization_customer') }}"
+                                class="d-inline">
                                 <input type="hidden" name="airline" value="{{ flight['airline_name'] }}">
                                 <input type="hidden" name="flight_num" value="{{ flight['flight_num'] }}">
-                                <button type="submit">
+                                <button type="submit" class="btn btn-primary btn-sm">
                                     Purchase
                                 </button>
                             </form>
                         {% elif session.get('role') == 'agent' %}
-                            <form method="post" action="{{ url_for('purchase_ticket_agent') }}">
+                            <form method="POST"
+                                  action="{{ url_for('purchase_authorization_agent') }}"
+                                  class="d-flex align-items-center">
+                                <label class="me-2 mb-0">
+                                    Customer Email:
+                                    <input type="email"
+                                           name="customer_email"
+                                           class="form-control d-inline-block"
+                                           style="width: 220px;"
+                                           required>
+                                </label>
                                 <input type="hidden" name="airline" value="{{ flight['airline_name'] }}">
                                 <input type="hidden" name="flight_num" value="{{ flight['flight_num'] }}">
-                                <div class="input-group">
-                                    <input type="email" class="form-control form-control-sm" name="customer_email" placeholder="Customer Email" required>
-                                    <button type="submit" class="btn btn-primary btn-sm">Purchase for Customer</button>
-                                </div>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    Purchase for Customer
+                                </button>
                             </form>
                         {% else %}
                             <span class="text-muted">Login as customer or agent to purchase</span>
