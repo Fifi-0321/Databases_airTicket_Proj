@@ -1048,9 +1048,10 @@ def view_top_customers():
 
 
 
+# Airline Staff Part:
 
-
-# Staff1: View My Flights:
+# Staff 1 -- View My Flights:
+# [Revise]: Default showing the next 30 days
 @app.route('/staff_view_flights', methods=['GET', 'POST'])
 def staff_view_flights():
     if 'email' not in session or session['role'] != 'staff':
@@ -1138,7 +1139,7 @@ def staff_view_customers():
 
 
 
-# Staff2: authorized staff create new flights
+# Staff 2 -- Create New Flights [Admin ONLY]:
 @app.route('/staff_create_flight', methods=['GET', 'POST'])
 def staff_create_flight():
     if 'email' not in session or session['role'] != 'staff':
@@ -1202,7 +1203,7 @@ def staff_create_flight():
 
 
 
-# Staff3: change status of flights (Operator ONLY)
+# Staff 3 -- Change Status of Flights [Operator ONLY]:
 @app.route('/staff_change_status', methods=['GET', 'POST'])
 def staff_change_status():
     if 'email' not in session or session['role'] != 'staff':
@@ -1257,7 +1258,8 @@ def staff_change_status():
 
 
 
-# Staff4: add new airplanes (Admin ONLY)
+# Staff 4 -- Add New Airplanes [Admin ONLY]:
+# [Need Revise]: Check Admin permission
 @app.route('/staff_add_airplane', methods=['GET', 'POST'])
 def staff_add_airplane():
     if 'email' not in session or session['role'] != 'staff':
@@ -1289,7 +1291,7 @@ def staff_add_airplane():
 
 
 
-# Staff5: add airport (certain CONFUSION here in the requirement file)
+# Staff 5 -- Add New Airport [Admin ONLY]:
 @app.route('/staff_add_airport', methods=['GET', 'POST'])
 def staff_add_airport():
     if 'email' not in session or session['role'] != 'staff':
@@ -1333,7 +1335,7 @@ def staff_add_airport():
     return render_template("staff_add_airport.html", airports=airports)
 
 
-# Staff6: view all agents
+# Staff 6 -- View all agents:
 from datetime import datetime, timedelta
 
 @app.route('/view_all_agents')
@@ -1406,7 +1408,9 @@ def view_all_agents():
                            top_year_sales=top_year_sales,
                            top_year_commission=top_year_commission)
 
-# Staff7: View frequent customers
+
+
+# Staff 7 -- View frequent customers:
 @app.route('/staff_frequent_customers', methods=['GET', 'POST'])
 def staff_frequent_customers():
     if 'email' not in session or session['role'] != 'staff':
@@ -1468,7 +1472,7 @@ def staff_frequent_customers():
 
 
 
-# Staff8: view monthly reports
+# Staff 8 -- View monthly reports:
 @app.route('/staff_reports', methods=['GET', 'POST'])
 def staff_reports():
     if 'email' not in session or session['role'] != 'staff':
@@ -1556,7 +1560,8 @@ def staff_reports():
 
 
 
-# Staff9: revenue comparison
+# Staff 9 -- revenue comparison:
+# [Revise]: Delay vs. on-time statistics:
 import matplotlib
 matplotlib.use('Agg')  # Ensures rendering works without a display (good for Flask servers)
 import matplotlib.pyplot as plt
@@ -1656,7 +1661,9 @@ def staff_revenue_comparison():
                            direct_sale_lastyear=direct_sale_lastyear,
                            indirect_sale_lastyear=indirect_sale_lastyear)
     
-# Staff10: view top destination
+
+
+# Staff 10 -- View Top Destination:
 @app.route('/staff_top_destinations')
 def staff_top_destinations():    
     if 'email' not in session or session['role'] != 'staff':
@@ -1700,7 +1707,9 @@ def staff_top_destinations():
                            top_destinations_last3months = top_destinations_last3months,
                            top_destinations_lastyear = top_destinations_lastyear)
 
-# Staff 11: grant permissions:
+
+
+# Staff 11 -- Grant Permissions:
 @app.route('/staff_grant_permission', methods=['GET', 'POST'])
 def staff_grant_permission():
     if 'email' not in session or session['role'] != 'staff':
@@ -1767,7 +1776,7 @@ def staff_grant_permission():
 
  
 
-# Staff12: add booking agents:
+# Staff 12 -- Add Booking Agents [Admin ONLY]:
 @app.route('/staff_add_agent', methods=['GET', 'POST'])
 def staff_add_agent():
     if 'email' not in session or session['role'] != 'staff':
@@ -1831,6 +1840,8 @@ def staff_add_agent():
     return render_template('staff_add_agent.html')
 
 
+# [City Alias]
+# [Perform server-side validation of all inputs]
 
       
     
