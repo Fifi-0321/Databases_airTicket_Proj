@@ -9,7 +9,7 @@ app.secret_key = 'my_super_secret_key_for_AirSystem_2025'
 conn = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='20040321',
+    password='',
     database='AirTicketReservationSystem'
 )
 
@@ -1946,7 +1946,7 @@ def staff_delay_vs_ontime():
 
 
 
-# Staff 10 -- View Top Destination:
+# Staff 10 -- View Top Destination from purchased flights:
 @app.route('/staff_top_destinations')
 def staff_top_destinations():    
     if 'email' not in session or session['role'] != 'staff':

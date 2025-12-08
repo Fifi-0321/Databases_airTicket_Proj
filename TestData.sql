@@ -480,8 +480,8 @@ CREATE TABLE `purchases` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 INSERT INTO purchases (ticket_id, customer_email, booking_agent_id, purchase_date) VALUES
-(1,  'ml9007@nyu.edu',             2,   '2025-05-05'),
-(2,  'sarah.jones@example.com',    NULL,'2025-05-10'),
+(1,  'ml9007@nyu.edu',             2,   '2025-10-05'),
+(2,  'sarah.jones@example.com',    NULL,'2025-11-10'),
 (3,  'emma.wilson@gmail.com',      1,   '2025-05-12'),
 (4,  'yuki.tanaka@gmail.com',      NULL,'2025-05-15'),
 (5,  'kevin.brown@yahoo.com',      4,   '2025-05-18'),
