@@ -1239,7 +1239,7 @@ def staff_add_airplane():
 
     airline_name = result[0]
 
-    # Check Admin permission:
+    # Check Admin permission
     cursor.execute(
         "SELECT * FROM permission WHERE username = %s AND permission_type = 'Admin'",
         (session['email'],)
@@ -1271,7 +1271,7 @@ def staff_add_airplane():
         cursor.close()
         return redirect(url_for('staff_add_airplane'))
 
-    # Show existing airplanes for this airline:
+    # Show existing airplanes for this airline
     cursor.execute(
         """
         SELECT airplane_id, seats
@@ -1366,49 +1366,88 @@ def staff_change_status():
     cursor = conn.cursor()
 
     # Get airline the staff belongs to
-    cursor.execute("SELECT airline_name FROM airline_staff WHERE username = %s", (session['email'],))
+    cursor.execute(
+        "SELECT airline_name FROM airline_staff WHERE username = %s",
+        (session['email'],)
+    )
     result = cursor.fetchone()
     if not result:
+        cursor.close()
         flash("Staff not associated with any airline.")
         return redirect(url_for('staff_home'))
     airline_name = result[0]
 
     # Check if user has Operator permission
-    cursor.execute("SELECT * FROM permission WHERE username = %s AND permission_type = 'Operator'", (session['email'],))
+    cursor.execute(
+        "SELECT * FROM permission WHERE username = %s AND permission_type = 'Operator'",
+        (session['email'],)
+    )
     is_operator = cursor.fetchone() is not None
 
     if not is_operator:
+        cursor.close()
         flash("Unauthorized: Operator permission required to change flight status.")
         return redirect(url_for('staff_home'))
 
     # Handle form submission
     if request.method == 'POST':
-        flight_num = request.form['flight_num']
+        key = request.form['flight_key']
         new_status = request.form['new_status']
 
         try:
-            cursor.execute("""
+            flight_num, departure_time_str = key.split('|', 1)
+
+            from datetime import datetime
+            departure_time = datetime.strptime(departure_time_str, '%Y-%m-%d %H:%M:%S')
+
+            cursor.execute(
+                """
                 UPDATE flight
                 SET status = %s
-                WHERE airline_name = %s AND flight_num = %s
-            """, (new_status, airline_name, flight_num))
+                WHERE airline_name = %s
+                  AND flight_num = %s
+                  AND departure_time = %s
+                """,
+                (new_status, airline_name, flight_num, departure_time)
+            )
             conn.commit()
-            flash("Flight status updated successfully.")
+
+            if cursor.rowcount == 0:
+                flash("No matching flight found to update.")
+            else:
+                flash("Flight status updated successfully.")
         except Exception as e:
+            print("Error updating flight status:", e)
             flash("Error updating flight status: " + str(e))
+
+        cursor.close()
         return redirect(url_for('staff_change_status'))
 
     # On GET, show all future flights for this airline
-    cursor.execute("""
-        SELECT flight_num, departure_airport, arrival_airport, departure_time, arrival_time, status
+    cursor.execute(
+        """
+        SELECT flight_num,
+               departure_airport,
+               arrival_airport,
+               departure_time,
+               arrival_time,
+               status
         FROM flight
-        WHERE airline_name = %s AND departure_time >= NOW()
+        WHERE airline_name = %s
+          AND departure_time >= NOW()
         ORDER BY departure_time ASC
-    """, (airline_name,))
+        """,
+        (airline_name,)
+    )
     flights = cursor.fetchall()
     cursor.close()
 
-    return render_template("staff_change_status.html", flights=flights)
+    return render_template(
+        "staff_change_status.html",
+        flights=flights,
+        airline_name=airline_name,
+        is_operator=is_operator
+    )
 
 
 
@@ -1488,6 +1527,8 @@ def view_all_agents():
                            top_month_sales=top_month_sales,
                            top_year_sales=top_year_sales,
                            top_year_commission=top_year_commission)
+
+
 
 
 
