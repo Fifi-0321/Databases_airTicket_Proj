@@ -9,7 +9,7 @@ app.secret_key = 'my_super_secret_key_for_AirSystem_2025'
 conn = mysql.connector.connect(
     host='localhost',
     user='root',
-    password='',
+    password='20040321',
     database='AirTicketReservationSystem'
 )
 
@@ -534,14 +534,15 @@ def view_customer_flights():
     if 'email' not in session or session.get('role') != 'customer':
         return redirect(url_for('login'))
 
-    start_date_str = request.args.get('start_date')      
-    end_date_str = request.args.get('end_date')          
-    origin = request.args.get('origin', '').strip()      
-    destination = request.args.get('destination', '').strip()
-    show = request.args.get('show', '').strip()          
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+    origin_input = request.args.get('origin', '').strip()
+    destination_input = request.args.get('destination', '').strip()
+    show = request.args.get('show', '').strip()
 
     cursor = conn.cursor(dictionary=True)
 
+    # Base query
     base_query = """
         SELECT f.*
         FROM flight f
@@ -550,7 +551,6 @@ def view_customer_flights():
         JOIN purchases p ON t.ticket_id = p.ticket_id
         WHERE p.customer_email = %s
     """
-
     params = [session['email']]
 
     # Default View: show only upcoming flights
@@ -559,7 +559,7 @@ def view_customer_flights():
     elif show == 'past':
         base_query += " AND DATE(f.departure_time) < CURDATE() "
 
-    # 1. Optional date range filter:
+    # Date range filters
     if start_date_str:
         base_query += " AND DATE(f.departure_time) >= %s "
         params.append(start_date_str)
@@ -568,18 +568,28 @@ def view_customer_flights():
         base_query += " AND DATE(f.departure_time) <= %s "
         params.append(end_date_str)
 
-    # 2. Optional origin / destination filters:
-    if origin:
-        base_query += " AND f.departure_airport = %s "
-        params.append(origin)
+    # ================================
+    # NEW: City Alias / Multi-Airport Support
+    # ================================
+    origin_airports = get_airports_from_input(cursor, origin_input)
+    destination_airports = get_airports_from_input(cursor, destination_input)
 
-    if destination:
-        base_query += " AND f.arrival_airport = %s "
-        params.append(destination)
+    # Origin filter
+    if origin_input and origin_airports:
+        placeholder = ",".join(["%s"] * len(origin_airports))
+        base_query += f" AND f.departure_airport IN ({placeholder}) "
+        params.extend(origin_airports)
 
-    # Sort results: earliest departure time first:
+    # Destination filter
+    if destination_input and destination_airports:
+        placeholder = ",".join(["%s"] * len(destination_airports))
+        base_query += f" AND f.arrival_airport IN ({placeholder}) "
+        params.extend(destination_airports)
+
+    # Sort results
     base_query += " ORDER BY f.departure_time ASC "
 
+    # Execute
     cursor.execute(base_query, tuple(params))
     flights = cursor.fetchall()
     cursor.close()
@@ -589,8 +599,8 @@ def view_customer_flights():
         flights=flights,
         start_date=start_date_str,
         end_date=end_date_str,
-        origin=origin,
-        destination=destination,
+        origin=origin_input,
+        destination=destination_input,
         show=show or 'upcoming'
     )
 
@@ -2117,7 +2127,6 @@ def staff_add_agent():
 
 # [City Alias]
 # [Perform server-side validation of all inputs]
-# [不同机子共享用户记录/session 的问题]
       
     
 @app.route('/logout')
