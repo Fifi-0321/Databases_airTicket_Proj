@@ -4,8 +4,15 @@
     <div class="card shadow p-4 mb-4">
         <h2 class="text-center mb-4">Top Booking Agents</h2>
 
+        {% if airline_name is defined %}
+            <p class="text-center text-muted mb-4">
+                Showing booking agents performance for airline <strong>{{ airline_name }}</strong>.
+            </p>
+        {% endif %}
+
+        <!-- Top 5 by Tickets Sold (Past Month) -->
         <h4 class="mt-3">Top 5 by Tickets Sold (Past Month)</h4>
-        {% if top_month_sales %}
+        {% if top_month_sales and top_month_sales|length > 0 %}
         <ul class="list-group mb-3">
             {% for agent in top_month_sales %}
             <li class="list-group-item d-flex justify-content-between">
@@ -18,8 +25,9 @@
             <p>No sales in the past month.</p>
         {% endif %}
 
+        <!-- Top 5 by Tickets Sold (Past Year) -->
         <h4 class="mt-4">Top 5 by Tickets Sold (Past Year)</h4>
-        {% if top_year_sales %}
+        {% if top_year_sales and top_year_sales|length > 0 %}
         <ul class="list-group mb-3">
             {% for agent in top_year_sales %}
             <li class="list-group-item d-flex justify-content-between">
@@ -32,18 +40,34 @@
             <p>No sales in the past year.</p>
         {% endif %}
 
-        <h4 class="mt-4">Top 5 by Commission Earned (Past Year)</h4>
-        {% if top_year_commission %}
+        <!-- Top 5 by Commission Earned (Past Month) -->
+        <h4 class="mt-4">Top 5 by Commission Earned (Past Month)</h4>
+        {% if top_month_commission and top_month_commission|length > 0 %}
         <ul class="list-group mb-3">
-            {% for agent in top_year_commission %}
+            {% for agent in top_month_commission %}
             <li class="list-group-item d-flex justify-content-between">
                 <span>{{ agent.email }}</span>
-                <span>${{ "%.2f"|format(agent.total_commission) }}</span>
+                <span>${{ "%.2f"|format(agent.total_commission or 0) }}</span>
             </li>
             {% endfor %}
         </ul>
         {% else %}
-            <p>No commission data available.</p>
+            <p>No commission data for the past month.</p>
+        {% endif %}
+
+        <!-- Top 5 by Commission Earned (Past Year) -->
+        <h4 class="mt-4">Top 5 by Commission Earned (Past Year)</h4>
+        {% if top_year_commission and top_year_commission|length > 0 %}
+        <ul class="list-group mb-3">
+            {% for agent in top_year_commission %}
+            <li class="list-group-item d-flex justify-content-between">
+                <span>{{ agent.email }}</span>
+                <span>${{ "%.2f"|format(agent.total_commission or 0) }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+            <p>No commission data available for the past year.</p>
         {% endif %}
 
         <div class="text-center mt-4">

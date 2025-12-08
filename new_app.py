@@ -1458,15 +1458,14 @@ def staff_change_status():
 # Staff 6 -- View all agents:
 from datetime import datetime, timedelta
 
-@app.route('/view_all_agents')
-@app.route('/view_all_agents')
-def view_all_agents():
+@app.route('/staff_view_agents')
+def staff_view_agents():
     if 'email' not in session or session['role'] != 'staff':
         return redirect(url_for('login'))
 
     cursor = conn.cursor(dictionary=True)
 
-    # 🔍 Get the airline the current staff belongs to
+    # Get the airline the current staff belongs to
     cursor.execute("SELECT airline_name FROM airline_staff WHERE username = %s", (session['email'],))
     result = cursor.fetchone()
     if not result:
@@ -1478,7 +1477,7 @@ def view_all_agents():
     one_month_ago = today - timedelta(days=30)
     one_year_ago = today - timedelta(days=365)
 
-    # 1. Top 5 agents by ticket sales in the past month (restricted to this airline)
+    # 1. Top 5 agents by ticket sales in the past month
     cursor.execute("""
         SELECT ba.email, COUNT(*) AS tickets_sold
         FROM purchases p
@@ -1506,7 +1505,26 @@ def view_all_agents():
     """, (one_year_ago, airline_name, airline_name))
     top_year_sales = cursor.fetchall()
 
-    # 3. Top 5 agents by commission in the past year
+    # 3. Top 5 agents by commission in the past month
+    cursor.execute("""
+        SELECT ba.email, SUM(f.price * 0.1) AS total_commission
+        FROM purchases p
+        JOIN ticket t ON p.ticket_id = t.ticket_id
+        JOIN flight f
+          ON t.flight_num = f.flight_num
+         AND t.airline_name = f.airline_name
+        JOIN booking_agent ba ON p.booking_agent_id = ba.booking_agent_id
+        JOIN booking_agent_work_for baf ON ba.email = baf.email
+        WHERE p.purchase_date >= %s
+          AND f.airline_name = %s
+          AND baf.airline_name = %s
+        GROUP BY ba.email
+        ORDER BY total_commission DESC
+        LIMIT 5
+    """, (one_month_ago, airline_name, airline_name))
+    top_month_commission = cursor.fetchall()
+
+    # 4. Top 5 agents by commission in the past year
     cursor.execute("""
         SELECT ba.email, SUM(f.price * 0.1) AS total_commission
         FROM purchases p
@@ -1523,16 +1541,21 @@ def view_all_agents():
 
     cursor.close()
 
-    return render_template('view_all_agents.html',
-                           top_month_sales=top_month_sales,
-                           top_year_sales=top_year_sales,
-                           top_year_commission=top_year_commission)
+
+    return render_template(
+        'staff_view_agents.html',
+        top_month_sales=top_month_sales,
+        top_year_sales=top_year_sales,
+        top_year_commission=top_year_commission,
+        top_month_commission=top_month_commission,
+        airline_name=airline_name
+    )
 
 
 
 
 
-# Staff 7 -- View frequent customers:
+# Staff 7 -- View Frequent customers:
 @app.route('/staff_frequent_customers', methods=['GET', 'POST'])
 def staff_frequent_customers():
     if 'email' not in session or session['role'] != 'staff':
@@ -1594,7 +1617,7 @@ def staff_frequent_customers():
 
 
 
-# Staff 8 -- View monthly reports:
+# Staff 8 -- View Monthly Sales(Tickets sold) Report:
 @app.route('/staff_reports', methods=['GET', 'POST'])
 def staff_reports():
     if 'email' not in session or session['role'] != 'staff':
@@ -1682,8 +1705,7 @@ def staff_reports():
 
 
 
-# Staff 9 -- revenue comparison:
-# [Revise]: Delay vs. on-time statistics:
+# [Need Revise]Staff 9 -- Delay vs. on-time statistics:
 import matplotlib
 matplotlib.use('Agg')  # Ensures rendering works without a display (good for Flask servers)
 import matplotlib.pyplot as plt
@@ -1802,7 +1824,7 @@ def staff_top_destinations():
 
     airline_name = result['airline_name']
     
-    # top 3 destinations
+    # Top 3 destinations
     query_destinations = """
         SELECT a.airport_city, COUNT(a.airport_city) AS destination_count
         FROM purchases p 
@@ -1814,12 +1836,13 @@ def staff_top_destinations():
         ORDER BY destination_count DESC
         LIMIT 3
     """
-    # three months
+
+    # 3 months
     three_months_ago = datetime.now() - timedelta(days=90)
     cursor.execute(query_destinations, (three_months_ago, airline_name))
     top_destinations_last3months = cursor.fetchall()
 
-    # last year
+    # Last year
     last_year = datetime.now() - timedelta(days=365)
     cursor.execute(query_destinations, (last_year, airline_name))
     top_destinations_lastyear = cursor.fetchall()
