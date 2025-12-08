@@ -1051,7 +1051,7 @@ def view_top_customers():
 # Airline Staff Part:
 
 # Staff 1 -- View My Flights:
-# [Revise]: Default showing the next 30 days
+# Step 1: View all flights for the airline the staff works for
 @app.route('/staff_view_flights', methods=['GET', 'POST'])
 def staff_view_flights():
     if 'email' not in session or session['role'] != 'staff':
@@ -1066,22 +1066,30 @@ def staff_view_flights():
     from datetime import datetime, timedelta
     today = datetime.today()
 
-    start_date = request.form.get('start_date')
-    end_date = request.form.get('end_date')
+    start_date_raw = request.form.get('start_date')
+    end_date_raw = request.form.get('end_date')
     source = request.form.get('source')
     destination = request.form.get('destination')
     time_filter = request.form.get('time_filter')
 
-    # Default date range
-    if not start_date:
-        start_date = today - timedelta(days=365)
+    # Default date range: show all flights in next 30 days
+    if not start_date_raw:
+        start_date = today
     else:
-        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        start_date = datetime.strptime(start_date_raw, '%Y-%m-%d')
 
-    if not end_date:
-        end_date = today + timedelta(days=365)
+    if not end_date_raw:
+        end_date = today + timedelta(days=30)
     else:
-        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        end_date = datetime.strptime(end_date_raw, '%Y-%m-%d')
+
+    is_default_view = (
+        not start_date_raw and
+        not end_date_raw and
+        not source and
+        not destination and
+        (not time_filter or time_filter == 'all')
+    )
 
     # Build base query
     query = """
@@ -1111,8 +1119,18 @@ def staff_view_flights():
     flights = cursor.fetchall()
     cursor.close()
 
-    return render_template('staff_view_flights.html', flights=flights)
+    return render_template(
+        'staff_view_flights.html',
+        flights=flights,
+        start_date=start_date.strftime('%Y-%m-%d'),
+        end_date=end_date.strftime('%Y-%m-%d'),
+        source=source or '',
+        destination=destination or '',
+        time_filter=time_filter or '',
+        is_default_view=is_default_view
+    )
 
+# Step 2: View customers on a specific flight
 @app.route('/staff_view_customers')
 def staff_view_customers():
     if 'email' not in session or session['role'] != 'staff':
