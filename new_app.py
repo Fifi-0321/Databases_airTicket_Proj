@@ -1705,106 +1705,142 @@ def staff_reports():
 
 
 
-# [Need Revise]Staff 9 -- Delay vs. on-time statistics:
+# Staff 9 -- Delay vs. on-time statistics:
+
 import matplotlib
-matplotlib.use('Agg')  # Ensures rendering works without a display (good for Flask servers)
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import io
 import base64
+from datetime import datetime, timedelta
+from flask import render_template, session, redirect, url_for, flash
 
-@app.route('/staff_revenue_comparison')
-def staff_revenue_comparison():
-    if 'email' not in session or session['role'] != 'staff':
-        return redirect(url_for('login'))  
-    
-    cursor = conn.cursor(dictionary=True) 
-    
-    # Get staff's airline
-    cursor.execute("SELECT airline_name FROM airline_staff WHERE username = %s", (session['email'],))
+@app.route('/staff_delay_vs_ontime')
+def staff_delay_vs_ontime():
+    """
+    Show analytics: Delay vs. On-time statistics for the staff's airline.
+    - Last 30 days: #on-time vs #delayed flights
+    - Last 1 year:  #on-time vs #delayed flights
+    A flight is considered 'delayed' if flight.status = 'delayed',
+    and 'on-time' otherwise.
+    """
+    if 'email' not in session or session.get('role') != 'staff':
+        return redirect(url_for('login'))
+
+    cursor = conn.cursor(dictionary=True)
+
+    # Get the airline name of current staff
+    cursor.execute(
+        "SELECT airline_name FROM airline_staff WHERE username = %s",
+        (session['email'],)
+    )
     result = cursor.fetchone()
     if not result:
-        flash("No airline found for staff.")
+        cursor.close()
+        flash("No airline found for this staff.")
         return redirect(url_for('staff_home'))
 
     airline_name = result['airline_name']
-    
-    
-    last_month = datetime.now() - timedelta(days=30)
-    last_year = datetime.now() - timedelta(days=365)
-    
-    direct_sale = """
-        SELECT SUM(f.price) as total_revenue
-        FROM purchases p 
-            JOIN ticket t ON t.ticket_id = p.ticket_id
-            JOIN flight f ON t.flight_num = f.flight_num AND f.airline_name = t.airline_name
-        WHERE p.purchase_date >= %s AND p.booking_agent_id IS NULL AND f.airline_name = %s
-    """
-    # direct sale last month
-    cursor.execute(direct_sale, (last_month, airline_name))
-    direct_sale_lastmonth = cursor.fetchall()
-    
-    # direct sale last year
-    cursor.execute(direct_sale, (last_year, airline_name))
-    direct_sale_lastyear = cursor.fetchall()
 
-    indirect_sale = """
-        SELECT SUM(f.price) AS total_revenue
-        FROM purchases p 
-            JOIN ticket t ON t.ticket_id = p.ticket_id
-            JOIN flight f ON t.flight_num = f.flight_num AND f.airline_name = t.airline_name
-        WHERE p.purchase_date >= %s AND p.booking_agent_id IS NOT NULL AND f.airline_name = %s
+    now = datetime.now()
+    last_month = now - timedelta(days=30)
+    last_year = now - timedelta(days=365)
+
+    # Helper SQL: count delayed vs on-time flights in a time window
+    # delayed: status = 'delayed'
+    # on-time: status NOT IN ('delayed')
+    sql_delay_stats = """
+        SELECT
+            SUM(CASE WHEN status = 'delayed' THEN 1 ELSE 0 END) AS delayed_count,
+            SUM(CASE WHEN status <> 'delayed' OR status IS NULL THEN 1 ELSE 0 END) AS ontime_count
+        FROM flight f
+        WHERE f.airline_name = %s
+          AND f.departure_time >= %s
     """
-     # indirect sale last month
-    cursor.execute(indirect_sale, (last_month, airline_name))
-    indirect_sale_lastmonth = cursor.fetchall()
-    
-    # indirect sale last year
-    cursor.execute(indirect_sale, (last_year, airline_name))
-    indirect_sale_lastyear = cursor.fetchall()
-    
-    # bar_chart
-    lastmonth_labels=['Direct Sales Revenue','Indirect Sales Revenue']
-    lastmonth_values=[direct_sale_lastmonth[0]['total_revenue'],indirect_sale_lastmonth[0]['total_revenue']]
-    lastyear_labels=['Direct Sales Revenue','Indirect Sales Revenue']
-    lastyear_values=[direct_sale_lastyear[0]['total_revenue'],indirect_sale_lastyear[0]['total_revenue']]
-    
-    def create_bar_chart(labels, values, title, ylabel, time):
-        fig, ax = plt.subplots(figsize=(8, 5))
-        ax.bar(labels, values, color=['skyblue','lightpink'])
+
+    # ---- Last Month stats ----
+    cursor.execute(sql_delay_stats, (airline_name, last_month))
+    last_month_stats = cursor.fetchone() or {'delayed_count': 0, 'ontime_count': 0}
+
+    # ---- Last Year stats ----
+    cursor.execute(sql_delay_stats, (airline_name, last_year))
+    last_year_stats = cursor.fetchone() or {'delayed_count': 0, 'ontime_count': 0}
+
+    cursor.close()
+
+    lm_delayed = int(last_month_stats.get('delayed_count') or 0)
+    lm_ontime = int(last_month_stats.get('ontime_count') or 0)
+    ly_delayed = int(last_year_stats.get('delayed_count') or 0)
+    ly_ontime = int(last_year_stats.get('ontime_count') or 0)
+
+    last_month_stats['delayed_count'] = lm_delayed
+    last_month_stats['ontime_count'] = lm_ontime
+    last_year_stats['delayed_count'] = ly_delayed
+    last_year_stats['ontime_count'] = ly_ontime
+
+    # Helper to create bar chart encoded as base64
+    def create_bar_chart(labels, values, title, ylabel):
+        values = [int(v) for v in values]
+
+        fig, ax = plt.subplots(figsize=(6, 4))
+        colors = ['lightcoral', 'lightgreen']
+        bars = ax.bar(labels, values, color=colors)
         ax.set_title(title)
-        ax.set_xlabel(f"Last {time} Revenue Comparison")
         ax.set_ylabel(ylabel)
-        plt.xticks()
+
+        max_val = max(values) if values else 0
+
+        if max_val > 0:
+            ax.set_ylim(0, max_val * 1.25)
+
+        for bar, v in zip(bars, values):
+            height = bar.get_height()
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                height + max_val * 0.03,  
+                str(v),
+                ha='center',
+                va='bottom',              
+                fontsize=9,
+                color='black'
+            )
+
         plt.tight_layout()
 
-        buffer = io.BytesIO()  # Creates an in-memory binary buffer 
-        fig.savefig(buffer, format='png') # image is saved to the in-memory buffer
-        plt.close(fig) 
+        buffer = io.BytesIO()
+        fig.savefig(buffer, format='png')
+        plt.close(fig)
         buffer.seek(0)
-        # converts the Base64 encoded byte data into a string format, making it ready to be used in an HTML
-        return base64.b64encode(buffer.getvalue()).decode('utf-8')     
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
 
-    lastmonth_chart = create_bar_chart(
-        lastmonth_labels, lastmonth_values,
-        "Comparison of Revenue earned (Last Month)",
-        "Amount of Revenue", 'Month'
-    )    
-    
-    lastyear_chart = create_bar_chart(
-        lastyear_labels, lastyear_values,
-        "Comparison of Revenue earned (Last Year)",
-        "Amount of Revenue", 'Year'
-    ) 
-    cursor.close()
-    
-    return render_template('staff_revenue_comparison.html',
-                           lastmonth_chart=lastmonth_chart,
-                           lastyear_chart=lastyear_chart,
-                           direct_sale_lastmonth=direct_sale_lastmonth,
-                           indirect_sale_lastmonth=indirect_sale_lastmonth,
-                           direct_sale_lastyear=direct_sale_lastyear,
-                           indirect_sale_lastyear=indirect_sale_lastyear)
-    
+    # Create charts only if there is at least one flight in the period
+    lastmonth_chart = None
+    if lm_delayed + lm_ontime > 0:
+        lastmonth_chart = create_bar_chart(
+            labels=['Delayed', 'On-time'],
+            values=[lm_delayed, lm_ontime],
+            title='Delay vs On-time (Last 30 Days)',
+            ylabel='Number of Flights'
+        )
+
+    lastyear_chart = None
+    if ly_delayed + ly_ontime > 0:
+        lastyear_chart = create_bar_chart(
+            labels=['Delayed', 'On-time'],
+            values=[ly_delayed, ly_ontime],
+            title='Delay vs On-time (Last 1 Year)',
+            ylabel='Number of Flights'
+        )
+
+    return render_template(
+        'staff_delay_vs_ontime.html',
+        airline_name=airline_name,
+        last_month_stats=last_month_stats,
+        last_year_stats=last_year_stats,
+        lastmonth_chart=lastmonth_chart,
+        lastyear_chart=lastyear_chart
+    )
+
 
 
 # Staff 10 -- View Top Destination:
@@ -1854,7 +1890,8 @@ def staff_top_destinations():
 
 
 
-# Staff 11 -- Grant Permissions [? Admin ONLY]:
+
+# [不一定需要] Staff 11 -- Grant Permissions [? Admin ONLY]:
 @app.route('/staff_grant_permission', methods=['GET', 'POST'])
 def staff_grant_permission():
     if 'email' not in session or session['role'] != 'staff':
@@ -1987,7 +2024,7 @@ def staff_add_agent():
 
 # [City Alias]
 # [Perform server-side validation of all inputs]
-
+# [不同机子共享用户记录/session 的问题]
       
     
 @app.route('/logout')

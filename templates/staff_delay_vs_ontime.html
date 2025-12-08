@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow p-4 rounded-4">
+        <h2 class="text-center mb-4">Delay vs. On-time Statistics</h2>
+
+        {% if airline_name %}
+            <p class="text-center text-muted">
+                Airline: <strong>{{ airline_name }}</strong>
+            </p>
+        {% endif %}
+
+        <!-- Last Month Section -->
+        <h4 class="mt-4 mb-3">Last 30 Days</h4>
+        {% set lm_delayed = (last_month_stats.delayed_count or 0) if last_month_stats else 0 %}
+        {% set lm_ontime = (last_month_stats.ontime_count or 0) if last_month_stats else 0 %}
+
+        {% if lm_delayed + lm_ontime > 0 %}
+            <ul class="list-group mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><strong>Delayed Flights</strong></span>
+                    <span>{{ lm_delayed }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><strong>On-time Flights</strong></span>
+                    <span>{{ lm_ontime }}</span>
+                </li>
+            </ul>
+
+            {% if lastmonth_chart %}
+            <div class="text-center mb-5">
+                <img src="data:image/png;base64,{{ lastmonth_chart }}"
+                     alt="Last Month Delay vs On-time Chart"
+                     class="img-fluid rounded shadow-sm"/>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info text-center mb-4">
+                No flight statistics available for the last 30 days.
+            </div>
+        {% endif %}
+
+        <!-- Last Year Section -->
+        <h4 class="mt-4 mb-3">Last 1 Year</h4>
+        {% set ly_delayed = (last_year_stats.delayed_count or 0) if last_year_stats else 0 %}
+        {% set ly_ontime = (last_year_stats.ontime_count or 0) if last_year_stats else 0 %}
+
+        {% if ly_delayed + ly_ontime > 0 %}
+            <ul class="list-group mb-4">
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><strong>Delayed Flights</strong></span>
+                    <span>{{ ly_delayed }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><strong>On-time Flights</strong></span>
+                    <span>{{ ly_ontime }}</span>
+                </li>
+            </ul>
+
+            {% if lastyear_chart %}
+            <div class="text-center mb-4">
+                <img src="data:image/png;base64,{{ lastyear_chart }}"
+                     alt="Last Year Delay vs On-time Chart"
+                     class="img-fluid rounded shadow-sm"/>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-info text-center mb-4">
+                No flight statistics available for the last 1 year.
+            </div>
+        {% endif %}
+
+        <div class="text-center mt-4">
+            <a href="{{ url_for('staff_home') }}" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
