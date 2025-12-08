@@ -84,18 +84,62 @@ CREATE TABLE `airport` (
   `airport_city` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
+ALTER TABLE `airport`
+  ADD PRIMARY KEY (`airport_name`);
+
 --
 -- Insert Data: `airport`
 --
 
-INSERT INTO `airport` (`airport_name`, `airport_city`) VALUES
+INSERT INTO airport (airport_name, airport_city) VALUES
 ('BER', 'Berlin'),
 ('DUS', 'Düsseldorf'),
 ('FRA', 'Frankfurt'),
 ('MUC', 'München'),
 ('PEK', 'Beijing'),
 ('PVG', 'Shanghai'),
-('TXL', 'Berlin');
+('TXL', 'Berlin'),
+('ORD', 'Chicago'),
+('MDW', 'Chicago'),
+('SHA', 'Shanghai'),
+('TFU', 'Chengdu'),
+('CTU', 'Chengdu'),
+('PKX', 'Beijing'),
+('JFK', 'New York'),
+('LGA', 'New York');
+
+--
+-- Create Table: `city_airport_map`
+--
+
+CREATE TABLE `city_airport_map` (
+    `city_alias` VARCHAR(50) NOT NULL,
+    `airport_name` VARCHAR(50) NOT NULL,
+    PRIMARY KEY (`city_alias`, `airport_name`),
+    FOREIGN KEY (`airport_name`) REFERENCES `airport` (`airport_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+
+--
+-- Insert Data: `city_airport_map`
+--
+
+INSERT INTO city_airport_map VALUES
+('Berlin', 'BER'),
+('Berlin', 'TXL'),
+('Frankfurt', 'FRA'),
+('Düsseldorf', 'DUS'),
+('München', 'MUC'),
+('Chicago', 'ORD'),
+('Chicago', 'MDW'),
+('New York', 'JFK'),
+('New York', 'LGA'),
+('Shanghai', 'PVG'),
+('Shanghai', 'SHA'),
+('Chengdu', 'TFU'),
+('Chengdu', 'CTU'),
+('Beijing', 'PKX'),
+('Beijing', 'PEK');
 
 -- --------------------------------------------------------
 
@@ -309,12 +353,6 @@ ALTER TABLE `airline_staff`
 --
 ALTER TABLE `airplane`
   ADD PRIMARY KEY (`airline_name`,`airplane_id`);
-
---
--- Table index: `airport`
---
-ALTER TABLE `airport`
-  ADD PRIMARY KEY (`airport_name`);
 
 --
 -- Table index: `booking_agent`

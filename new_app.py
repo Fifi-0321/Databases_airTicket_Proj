@@ -224,42 +224,135 @@ def staff_home():
 
 # Public Part:
 
+def get_airports_from_input(cursor, user_input):
+    """
+    Given a user input string (which may be a city name, an alias, or an airport code),
+    return a list of airport codes that match the input.
+
+    This function supports the Multi-Airport Cities / City Alias feature required in the
+    anti-automation challenge. It expands an input into all relevant airport codes.
+
+    Examples:
+        "Berlin"  -> ["BER", "TXL"]
+        "BER"     -> ["BER"]
+        "BJ"      -> ["PEK"]   (if alias added to city_airport_map)
+        "Beijing" -> ["PEK"]
+        "Shanghai City" -> ["PVG"]
+
+    Resolution order (additive):
+        1. Check city_airport_map for alias match
+        2. Check if input is a direct airport code
+        3. Check if input matches airport_city in airport table
+        (All results are combined; duplicates removed)
+    """
+
+    # No filtering if input is empty
+    if not user_input:
+        return None
+
+    airports = set()
+
+    # ---------------------------------------------------------
+    # 1. Look up aliases in city_airport_map (most flexible)
+    # ---------------------------------------------------------
+    cursor.execute("""
+        SELECT airport_name
+        FROM city_airport_map
+        WHERE LOWER(city_alias) = LOWER(%s)
+    """, (user_input,))
+    for row in cursor.fetchall():
+        airports.add(row["airport_name"])
+
+    # ---------------------------------------------------------
+    # 2. Check if the input is a direct airport name (PVG, BER, FRA...)
+    # ---------------------------------------------------------
+    cursor.execute("""
+        SELECT airport_name
+        FROM airport
+        WHERE LOWER(airport_name) = LOWER(%s)
+    """, (user_input,))
+    row = cursor.fetchone()
+    if row:
+        airports.add(row["airport_name"])
+
+    # ---------------------------------------------------------
+    # 3. Check if the input is a city name (airport_city column)
+    # ---------------------------------------------------------
+    cursor.execute("""
+        SELECT airport_name
+        FROM airport
+        WHERE LOWER(airport_city) = LOWER(%s)
+    """, (user_input,))
+    for row in cursor.fetchall():
+        airports.add(row["airport_name"])
+
+    # Return None if nothing matched at all
+    if not airports:
+        return None
+
+    # Convert to list for safe SQL insertion
+    return list(airports)
+
 # Public Search for Upcoming Flight:
 from datetime import datetime
 @app.route('/search_flights', methods=['GET', 'POST'])
 def search_flights():
     flights = None
+
     if request.method == 'POST':
         source = request.form['source']
         destination = request.form['destination']
         start_date = request.form['start_date']
         end_date = request.form['end_date']
 
+        # Validate dates
         try:
             start_date_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
             end_date_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
         except ValueError:
             flash('Invalid date format. Please use YYYY-MM-DD.')
-            return render_template('search_flights.html', flights=flights)
+            return render_template('search_flights.html', flights=None)
 
         if start_date_obj > end_date_obj:
             flash('Start date cannot be after end date.')
-            return render_template('search_flights.html', flights=flights)
+            return render_template('search_flights.html', flights=None)
 
         cursor = conn.cursor(dictionary=True)
+
+        # NEW: expand city/alias/airport to airport list
+        source_airports = get_airports_from_input(cursor, source)
+        dest_airports = get_airports_from_input(cursor, destination)
+
+        if not source_airports:
+            flash("No airports found matching origin.")
+            return render_template('search_flights.html', flights=None)
+
+        if not dest_airports:
+            flash("No airports found matching destination.")
+            return render_template('search_flights.html', flights=None)
+
+        # Build SQL using FIND_IN_SET() to avoid dynamic IN (...)
         query = """
-            SELECT f.* FROM flight f
-            JOIN airport a1 ON f.departure_airport = a1.airport_name
-            JOIN airport a2 ON f.arrival_airport = a2.airport_name
-            WHERE (a1.airport_name = %s OR a1.airport_city = %s)
-              AND (a2.airport_name = %s OR a2.airport_city = %s)
+            SELECT f.*
+            FROM flight f
+            WHERE FIND_IN_SET(f.departure_airport, %s)
+              AND FIND_IN_SET(f.arrival_airport, %s)
               AND DATE(f.departure_time) BETWEEN %s AND %s
         """
-        cursor.execute(query, (source, source, destination, destination, start_date_obj, end_date_obj))
+
+        params = [
+            ",".join(source_airports),
+            ",".join(dest_airports),
+            start_date_obj,
+            end_date_obj,
+        ]
+
+        cursor.execute(query, params)
         flights = cursor.fetchall()
         cursor.close()
 
     return render_template('search_flights.html', flights=flights)
+
 
 
 # [NEW] Public Lookup of Flight Status:
