@@ -1219,9 +1219,145 @@ def staff_create_flight():
 
 
 
+# Staff 3 -- Add New Airplanes [Admin ONLY]:
+@app.route('/staff_add_airplane', methods=['GET', 'POST'])
+def staff_add_airplane():
+    if 'email' not in session or session['role'] != 'staff':
+        return redirect(url_for('login'))
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT airline_name FROM airline_staff WHERE username = %s",
+        (session['email'],)
+    )
+    result = cursor.fetchone()
+    if not result:
+        cursor.close()
+        flash("Airline staff not found.")
+        return redirect(url_for('staff_home'))
+
+    airline_name = result[0]
+
+    # Check Admin permission:
+    cursor.execute(
+        "SELECT * FROM permission WHERE username = %s AND permission_type = 'Admin'",
+        (session['email'],)
+    )
+    is_admin = cursor.fetchone() is not None
+
+    if not is_admin:
+        cursor.close()
+        flash("Unauthorized: Admin permission required to add airplanes.")
+        return redirect(url_for('staff_home'))
 
 
-# Staff 3 -- Change Status of Flights [Operator ONLY]:
+    if request.method == 'POST':
+        airplane_id = request.form['airplane_id']
+        seats = request.form['seats']
+
+        insert_query = """
+            INSERT INTO airplane (airline_name, airplane_id, seats)
+            VALUES (%s, %s, %s)
+        """
+        try:
+            cursor.execute(insert_query, (airline_name, airplane_id, seats))
+            conn.commit()
+            flash('Airplane added successfully!')
+        except Exception as e:
+            print("Error inserting airplane:", e)
+            flash('Error: Could not add airplane.')
+
+        cursor.close()
+        return redirect(url_for('staff_add_airplane'))
+
+    # Show existing airplanes for this airline:
+    cursor.execute(
+        """
+        SELECT airplane_id, seats
+        FROM airplane
+        WHERE airline_name = %s
+        ORDER BY airplane_id
+        """,
+        (airline_name,)
+    )
+    airplanes = cursor.fetchall()
+    cursor.close()
+
+    return render_template(
+        'staff_add_airplane.html',
+        is_admin=True,
+        airplanes=airplanes,
+        airline_name=airline_name
+    )
+
+
+# Staff 4 -- Add New Airport [Admin ONLY]:
+@app.route('/staff_add_airport', methods=['GET', 'POST'])
+def staff_add_airport():
+    if 'email' not in session or session['role'] != 'staff':
+        return redirect(url_for('login'))
+
+    cursor = conn.cursor()
+
+    # Get airline of the staff
+    cursor.execute(
+        "SELECT airline_name FROM airline_staff WHERE username = %s",
+        (session['email'],)
+    )
+    result = cursor.fetchone()
+    if not result:
+        cursor.close()
+        flash("Airline staff not found.")
+        return redirect(url_for('staff_home'))
+    airline_name = result[0]
+
+    # Check Admin permission
+    cursor.execute(
+        "SELECT * FROM permission WHERE username = %s AND permission_type = 'Admin'",
+        (session['email'],)
+    )
+    is_admin = cursor.fetchone() is not None
+
+    if not is_admin:
+        cursor.close()
+        flash("Unauthorized: Admin permission required to add airports.")
+        return redirect(url_for('staff_home'))
+
+    if request.method == 'POST':
+        airport_name = request.form['airport_name']
+        airport_city = request.form['airport_city']
+
+        try:
+            cursor.execute(
+                "INSERT INTO airport (airport_name, airport_city) VALUES (%s, %s)",
+                (airport_name, airport_city)
+            )
+            conn.commit()
+            flash("Airport added successfully!")
+        except Exception as e:
+            flash("Error adding airport: " + str(e))
+        cursor.close()
+        return redirect(url_for('staff_add_airport'))
+
+    # Show existing airports
+    cursor.execute("SELECT * FROM airport ORDER BY airport_name")
+    airports = cursor.fetchall()
+    cursor.close()
+
+    return render_template(
+        "staff_add_airport.html",
+        airports=airports,
+        is_admin=True,
+        airline_name=airline_name
+    )
+
+
+
+
+
+
+# Staff 5 -- Update Status of Flights [Operator ONLY]:
 @app.route('/staff_change_status', methods=['GET', 'POST'])
 def staff_change_status():
     if 'email' not in session or session['role'] != 'staff':
@@ -1276,81 +1412,8 @@ def staff_change_status():
 
 
 
-# Staff 4 -- Add New Airplanes [Admin ONLY]:
-# [Need Revise]: Check Admin permission
-@app.route('/staff_add_airplane', methods=['GET', 'POST'])
-def staff_add_airplane():
-    if 'email' not in session or session['role'] != 'staff':
-        return redirect(url_for('login'))
-
-    cursor = conn.cursor()
-    query = "SELECT airline_name FROM airline_staff WHERE username = %s"
-    cursor.execute(query, (session['email'],))
-    airline_name = cursor.fetchone()[0]
-
-    if request.method == 'POST':
-        airplane_id = request.form['airplane_id']
-        seats = request.form['seats']
-
-        insert_query = "INSERT INTO airplane (airline_name, airplane_id, seats) VALUES (%s, %s, %s)"
-        try:
-            cursor.execute(insert_query, (airline_name, airplane_id, seats))
-            conn.commit()
-            flash('Airplane added successfully!')
-        except:
-            flash('Error: Could not add airplane.')
-        cursor.close()
-        return redirect(url_for('staff_home'))
-
-    cursor.close()
-    return render_template('staff_add_airplane.html')
 
 
-
-
-
-# Staff 5 -- Add New Airport [Admin ONLY]:
-@app.route('/staff_add_airport', methods=['GET', 'POST'])
-def staff_add_airport():
-    if 'email' not in session or session['role'] != 'staff':
-        return redirect(url_for('login'))
-
-    cursor = conn.cursor()
-
-    # Get airline of the staff
-    cursor.execute("SELECT airline_name FROM airline_staff WHERE username = %s", (session['email'],))
-    result = cursor.fetchone()
-    if not result:
-        flash("Airline staff not found.")
-        return redirect(url_for('staff_home'))
-    airline_name = result[0]
-
-    # Check Admin permission
-    cursor.execute("SELECT * FROM permission WHERE username = %s AND permission_type = 'Admin'", (session['email'],))
-    is_admin = cursor.fetchone() is not None
-
-    if not is_admin:
-        flash("Unauthorized: Admin permission required to add airports.")
-        return redirect(url_for('staff_home'))
-
-    if request.method == 'POST':
-        airport_name = request.form['airport_name']
-        airport_city = request.form['airport_city']
-
-        try:
-            cursor.execute("INSERT INTO airport (airport_name, airport_city) VALUES (%s, %s)", (airport_name, airport_city))
-            conn.commit()
-            flash("Airport added successfully!")
-        except Exception as e:
-            flash("Error adding airport: " + str(e))
-        return redirect(url_for('staff_add_airport'))
-
-    # Show existing airports
-    cursor.execute("SELECT * FROM airport ORDER BY airport_name")
-    airports = cursor.fetchall()
-    cursor.close()
-
-    return render_template("staff_add_airport.html", airports=airports)
 
 
 # Staff 6 -- View all agents:
@@ -1727,7 +1790,7 @@ def staff_top_destinations():
 
 
 
-# Staff 11 -- Grant Permissions:
+# Staff 11 -- Grant Permissions [? Admin ONLY]:
 @app.route('/staff_grant_permission', methods=['GET', 'POST'])
 def staff_grant_permission():
     if 'email' not in session or session['role'] != 'staff':
