@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, url_for, redirect, session, flash
+from flask import Flask, render_template, request, url_for, redirect, session, flash, make_response
+from functools import wraps
 import mysql.connector
 import hashlib
 
@@ -13,6 +14,15 @@ conn = mysql.connector.connect(
     database='AirTicketReservationSystem'
 )
 
+def nocache(view):
+    @wraps(view)
+    def no_cache(*args, **kwargs):
+        response = make_response(view(*args, **kwargs))
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+    return no_cache
 
 # Homepage:
 @app.route('/')
@@ -27,7 +37,6 @@ def index():
         elif role == 'staff':
             return redirect(url_for('staff_home'))
     return render_template('index.html')
-
 
 # Login page:
 @app.route('/login')
@@ -191,18 +200,21 @@ def registerAuth():
 
 # Homepages for Different Use Cases:
 @app.route('/customer_home')
+@nocache
 def customer_home():
     if 'email' in session and session['role'] == 'customer':
         return render_template('customer_home.html')
     return redirect(url_for('login'))
 
 @app.route('/agent_home')
+@nocache
 def agent_home():
     if 'email' in session and session['role'] == 'agent':
         return render_template('agent_home.html')
     return redirect(url_for('login'))
 
 @app.route('/staff_home')
+@nocache
 def staff_home():
     if 'email' not in session or session['role'] != 'staff':
         return redirect(url_for('login'))
@@ -398,22 +410,24 @@ def check_flight_status():
 # [New]: Add `purchase_authorization_customer` page to let customer double-check and confirm purchase
 @app.route('/purchase_authorization_customer', methods=['POST'])
 def purchase_authorization_customer():
+    # Ensure user is logged in and is a customer
     if 'email' not in session or session['role'] != 'customer':
         return redirect(url_for('login'))
 
     airline = request.form.get('airline')
     flight_num = request.form.get('flight_num')
 
+    # Basic form validation
     if not airline or not flight_num:
         flash("Missing flight information.")
         return redirect(url_for('search_flights'))
 
     cursor = conn.cursor(dictionary=True)
 
-    # Step 1: Search for flight information
+    # step 1: Retrieve basic flight information
     cursor.execute("""
         SELECT f.airline_name, f.flight_num, f.departure_airport, f.arrival_airport,
-               f.departure_time, f.arrival_time, f.price, f.status
+               f.departure_time, f.arrival_time, f.price, f.status, f.airplane_id
         FROM flight f
         WHERE f.airline_name = %s AND f.flight_num = %s
     """, (airline, flight_num))
@@ -424,7 +438,37 @@ def purchase_authorization_customer():
         flash("Flight not found.")
         return redirect(url_for('search_flights'))
 
-    # Step 2: Check whether Repeat Purchase
+    # step 2: Retrieve airplane capacity from airplane table
+    cursor.execute("""
+        SELECT seats
+        FROM airplane
+        WHERE airline_name = %s AND airplane_id = %s
+    """, (flight['airline_name'], flight['airplane_id']))
+    airplane = cursor.fetchone()
+
+    if not airplane:
+        cursor.close()
+        flash("Airplane information not found for this flight.")
+        return redirect(url_for('search_flights'))
+
+    capacity = airplane['seats']  # Total number of seats in the aircraft
+
+    # step 3: Count how many tickets have been sold for this flight
+    cursor.execute("""
+        SELECT COUNT(*) AS sold
+        FROM ticket t
+        JOIN purchases p ON t.ticket_id = p.ticket_id
+        WHERE t.airline_name = %s AND t.flight_num = %s
+    """, (airline, flight_num))
+    sold = cursor.fetchone()['sold']
+
+    # STEP 4: Capacity check — refuse purchase if flight is full
+    if sold >= capacity:
+        cursor.close()
+        flash("❌ This flight is fully booked. No seats left.")
+        return redirect(url_for('search_flights'))
+
+    # STEP 5: Check if this customer has already purchased this flight
     cursor.execute("""
         SELECT COUNT(*) AS cnt
         FROM ticket t
@@ -435,11 +479,11 @@ def purchase_authorization_customer():
     """, (airline, flight_num, session['email']))
     row = cursor.fetchone()
 
-    # Close uniformly as all queries have been completed:
-    cursor.close()
-
     has_purchased = row['cnt'] > 0 if row else False
 
+    cursor.close()
+
+    # step 6: Render confirmation page (purchase authorization)
     return render_template(
         'purchase_authorization_customer.html',
         flight=flight,
@@ -452,71 +496,75 @@ def purchase_ticket():
     if 'email' not in session or session['role'] != 'customer':
         return redirect(url_for('login'))
 
-    # Step0: Search for flights - share the same page with the public and get search result from "search_flights":
     airline = request.form.get('airline')
     flight_num = request.form.get('flight_num')
     password = request.form.get('password')
 
-    cursor = conn.cursor()
+    cursor = conn.cursor(dictionary=True)
 
-    # [New] Step 1: verify customer password again (purchase authorization)
+    # STEP 1: Verify customer password
     cursor.execute("SELECT password FROM customer WHERE email = %s", (session['email'],))
-    row = cursor.fetchone()
-    if not row:
+    user = cursor.fetchone()
+    if not user:
         cursor.close()
         flash("User not found.")
         return redirect(url_for('login'))
 
-    stored_hash = row[0]
-
+    stored_hash = user['password']
     input_hash = hashlib.md5(password.encode()).hexdigest() if password else None
 
-    # If wrong password - fail to purchase and back to the search page:
     if not password or input_hash != stored_hash:
         cursor.close()
         flash("Purchase authorization failed: incorrect password!")
         return redirect(url_for('search_flights'))
 
-    # Step 2: Check if the flight is sold out
+    # STEP 2: Retrieve airplane capacity
     cursor.execute("""
-        SELECT a.seats
-        FROM flight f JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id
+        SELECT a.seats, f.airplane_id
+        FROM flight f 
+        JOIN airplane a ON f.airline_name = a.airline_name AND f.airplane_id = a.airplane_id
         WHERE f.airline_name = %s AND f.flight_num = %s
     """, (airline, flight_num))
-    result = cursor.fetchone()
-    if not result:
-        flash("Flight not found.")
-        return redirect(url_for('purchase_ticket'))
+    airplane = cursor.fetchone()
 
-    max_seats = result[0]
-
-    # Count how many tickets have been sold for this flight
-    cursor.execute("""
-        SELECT COUNT(*) FROM ticket
-        WHERE airline_name = %s AND flight_num = %s
-    """, (airline, flight_num))
-    sold = cursor.fetchone()[0]
-
-    if sold >= max_seats:
-        flash('Sold out! No more tickets available for this flight.')
+    if not airplane:
         cursor.close()
-        return redirect(url_for('purchase_ticket'))
+        flash("Flight not found.")
+        return redirect(url_for('search_flights'))
 
-    # Step 3: Create new ticket (generate ticket_id)
-    cursor.execute("SELECT MAX(ticket_id) FROM ticket")
-    max_id = cursor.fetchone()[0]
-    ticket_id = 1 if max_id is None else max_id + 1
+    capacity = airplane['seats']
 
-    # Step 4: Insert new ticket
-    insert_ticket = "INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES (%s, %s, %s)"
-    cursor.execute(insert_ticket, (ticket_id, airline, flight_num))
+    # STEP 3: Count ACTUAL sold tickets (consistent with authorization)
+    cursor.execute("""
+        SELECT COUNT(*) AS sold
+        FROM ticket t
+        JOIN purchases p ON t.ticket_id = p.ticket_id
+        WHERE t.airline_name = %s AND t.flight_num = %s
+    """, (airline, flight_num))
+    sold = cursor.fetchone()['sold']
 
-    # Step 5: Insert into purchases
-    insert_purchase = """
+    # FINAL capacity check
+    if sold >= capacity:
+        cursor.close()
+        flash("❌ Purchase failed: this flight is fully booked.")
+        return redirect(url_for('search_flights'))
+
+    # STEP 4: Create new ticket_id
+    cursor.execute("SELECT MAX(ticket_id) AS max_id FROM ticket")
+    row = cursor.fetchone()
+    ticket_id = 1 if row['max_id'] is None else row['max_id'] + 1
+
+    # STEP 5: Insert into ticket
+    cursor.execute("""
+        INSERT INTO ticket (ticket_id, airline_name, flight_num)
+        VALUES (%s, %s, %s)
+    """, (ticket_id, airline, flight_num))
+
+    # STEP 6: Insert into purchases
+    cursor.execute("""
         INSERT INTO purchases (ticket_id, customer_email, purchase_date)
         VALUES (%s, %s, CURDATE())
-    """
-    cursor.execute(insert_purchase, (ticket_id, session['email']))
+    """, (ticket_id, session['email']))
 
     conn.commit()
     cursor.close()
@@ -1162,45 +1210,84 @@ def staff_view_flights():
 
     cursor = conn.cursor(dictionary=True)
 
+    # Get airline of the staff
     cursor.execute("SELECT airline_name FROM airline_staff WHERE username = %s", (session['email'],))
     airline_name = cursor.fetchone()['airline_name']
 
-    # Get filters
     from datetime import datetime, timedelta
     today = datetime.today()
 
+    # Get filters
     start_date_raw = request.form.get('start_date')
     end_date_raw = request.form.get('end_date')
     source = request.form.get('source')
     destination = request.form.get('destination')
-    time_filter = request.form.get('time_filter')
+    time_filter = request.form.get('time_filter')  # all / past / future
 
-    # Default date range: show all flights in next 30 days
-    if not start_date_raw:
+    # -------------------------------------
+    # CASE 0 — FIRST PAGE LOAD (GET request)
+    # -------------------------------------
+    if request.method == 'GET':
+        # Default: show future 30 days flights
         start_date = today
-    else:
-        start_date = datetime.strptime(start_date_raw, '%Y-%m-%d')
-
-    if not end_date_raw:
         end_date = today + timedelta(days=30)
-    else:
-        end_date = datetime.strptime(end_date_raw, '%Y-%m-%d')
 
-    is_default_view = (
-        not start_date_raw and
-        not end_date_raw and
-        not source and
-        not destination and
-        (not time_filter or time_filter == 'all')
-    )
+        query = """
+            SELECT * FROM flight
+            WHERE airline_name = %s
+            AND departure_time BETWEEN %s AND %s
+            ORDER BY departure_time ASC
+        """
+        cursor.execute(query, (airline_name, start_date, end_date))
+        flights = cursor.fetchall()
 
-    # Build base query
+        return render_template(
+            'staff_view_flights.html',
+            flights=flights,
+            start_date=start_date.strftime("%Y-%m-%d"),
+            end_date=end_date.strftime("%Y-%m-%d"),
+            source="",
+            destination="",
+            time_filter="all",
+            is_default_view=True
+        )
+
+
+    # -------------------------------------
+    # POST REQUEST — user clicked "Search"
+    # -------------------------------------
+
     query = """
         SELECT * FROM flight
         WHERE airline_name = %s
-        AND departure_time BETWEEN %s AND %s
     """
-    params = [airline_name, start_date, end_date]
+    params = [airline_name]
+
+    # ----------------------
+    # TIME FILTER PRIORITY
+    # ----------------------
+
+    if time_filter == 'past':
+        query += " AND departure_time < NOW()"
+
+    elif time_filter == 'future':
+        query += " AND departure_time > NOW()"
+
+    else:
+        # ALL MODE
+        if start_date_raw and end_date_raw:
+            # Use provided date range
+            start_date = datetime.strptime(start_date_raw, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date_raw, "%Y-%m-%d")
+            query += " AND departure_time BETWEEN %s AND %s"
+            params.extend([start_date, end_date])
+        else:
+            # No dates provided → return ALL flights
+            pass
+
+    # ----------------------
+    # SOURCE / DESTINATION
+    # ----------------------
 
     if source:
         query += " AND (departure_airport LIKE %s OR departure_airport IN (SELECT airport_name FROM airport WHERE airport_city LIKE %s))"
@@ -1210,12 +1297,7 @@ def staff_view_flights():
         query += " AND (arrival_airport LIKE %s OR arrival_airport IN (SELECT airport_name FROM airport WHERE airport_city LIKE %s))"
         params.extend([f'%{destination}%', f'%{destination}%'])
 
-    # Apply time filter
-    if time_filter == 'future':
-        query += " AND departure_time > NOW()"
-    elif time_filter == 'past':
-        query += " AND departure_time < NOW()"
-
+    # Sort result
     query += " ORDER BY departure_time ASC"
 
     cursor.execute(query, tuple(params))
@@ -1225,12 +1307,11 @@ def staff_view_flights():
     return render_template(
         'staff_view_flights.html',
         flights=flights,
-        start_date=start_date.strftime('%Y-%m-%d'),
-        end_date=end_date.strftime('%Y-%m-%d'),
-        source=source or '',
-        destination=destination or '',
-        time_filter=time_filter or '',
-        is_default_view=is_default_view
+        start_date=start_date_raw or "",
+        end_date=end_date_raw or "",
+        source=source or "",
+        destination=destination or "",
+        time_filter=time_filter or "all",
     )
 
 # Step 2: View customers on a specific flight
@@ -2124,11 +2205,8 @@ def staff_add_agent():
     cursor.close()
     return render_template('staff_add_agent.html')
 
-
-# [City Alias]
 # [Perform server-side validation of all inputs]
       
-    
 @app.route('/logout')
 def logout():
     session.pop('email', None)

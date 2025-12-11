@@ -1,15 +1,147 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center mt-5">
-    <h2 class="mb-4">Welcome to the Air Ticket Reservation System!</h2>
 
-    <div class="d-grid gap-3 col-6 mx-auto">
-        <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Login</a>
-        <a href="{{ url_for('register') }}" class="btn btn-success btn-lg">Register</a>
-        <a href="{{ url_for('search_flights') }}" class="btn btn-outline-info btn-lg">Search Flights (Public)</a>
-        <a href="{{ url_for('check_flight_status') }}" class="btn btn-outline-info btn-lg">
-            Check Flight Status (Public)
-        </a>
+<style>
+    /* Soft aviation background */
+    body {
+        background: linear-gradient(135deg, #e8f2ff 0%, #f6fbff 100%) !important;
+    }
+
+    /* Hero section */
+    .hero-section {
+        background: white;
+        padding: 70px 20px;
+        border-radius: 16px;
+        color: #003366;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Professional airplane icon */
+    .hero-plane {
+        width: 120px;
+        position: absolute;
+        right: 40px;
+        top: 30px;
+        opacity: 0.9;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .tab-card {
+        margin-top: -20px;
+        background: white;
+        border-radius: 14px;
+        padding: 35px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    .tab-pane {
+        animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Login button outline */
+    .btn-air {
+        background-color: white;
+        border: 2px solid #0d6efd;
+        color: #0d6efd;
+        transition: all 0.25s ease;
+        font-weight: 500;
+    }
+    .btn-air:hover {
+        background-color: #0d6efd;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.16);
+    }
+
+    /* Register button outline */
+    .btn-register-outline {
+        background-color: white;
+        border: 2px solid #198754;
+        color: #198754;
+        transition: all 0.25s ease;
+        font-weight: 500;
+    }
+    .btn-register-outline:hover {
+        background-color: #198754;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.16);
+    }
+</style>
+
+<div class="container mt-4">
+
+    <!-- Hero section -->
+    <div class="hero-section text-center">
+        <img src="https://cdn-icons-png.flaticon.com/512/1086/1086741.png" class="hero-plane">
+        <h1 class="fw-bold">Air Ticket Reservation System</h1>
+        <p class="fs-5 mt-3">Book flights, access services, and manage your air travel easily.</p>
+    </div>
+
+    <!-- Tabs below hero -->
+    <div class="tab-card">
+
+        <ul class="nav nav-tabs justify-content-center mb-4" id="indexTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-4" id="auth-tab" data-bs-toggle="tab"
+                        data-bs-target="#auth" type="button" role="tab">
+                    Login / Register
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4" id="public-tab" data-bs-toggle="tab"
+                        data-bs-target="#public" type="button" role="tab">
+                    Public Services
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- Auth Tab -->
+            <div class="tab-pane fade show active" id="auth" role="tabpanel">
+                <div class="d-grid gap-4 col-6 mx-auto">
+
+                    <a href="{{ url_for('login') }}" class="btn btn-air btn-lg">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Login
+                    </a>
+
+                    <a href="{{ url_for('register') }}" class="btn btn-register-outline btn-lg">
+                        <i class="bi bi-person-plus me-2"></i> Register
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Public Tab -->
+            <div class="tab-pane fade" id="public" role="tabpanel">
+                <div class="d-grid gap-4 col-6 mx-auto">
+
+                    <a href="{{ url_for('search_flights') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="bi bi-search me-2"></i> Search Flights
+                    </a>
+
+                    <a href="{{ url_for('check_flight_status') }}" class="btn btn-outline-info btn-lg">
+                        <i class="bi bi-speedometer2 me-2"></i> Flight Status
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
     </div>
 </div>
+
 {% endblock %}

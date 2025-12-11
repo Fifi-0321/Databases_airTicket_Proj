@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Register</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        .section { display: none; margin-top: 15px; }
-        .form-label { margin-top: 10px; }
-    </style>
-</head>
-<body class="bg-light">
+{% extends "base.html" %}
+{% block content %}
+
+<style>
+    .section { display: none; margin-top: 15px; }
+    .form-label { margin-top: 10px; }
+</style>
 
 <div class="container mt-5">
     <h2 class="mb-4 text-center">Register a New Account</h2>
@@ -27,8 +22,10 @@
     {% endwith %}
 
     <form action="{{ url_for('registerAuth') }}" method="POST" class="bg-white p-4 shadow-sm rounded">
+
+        <!-- Role Selection -->
         <div class="mb-3">
-            <label for="role" class="form-label">Role</label>
+            <label class="form-label">Role</label>
             <select name="role" id="role" class="form-select" required onchange="toggleFields()">
                 <option value="">-- Select Role --</option>
                 <option value="customer">Customer</option>
@@ -37,6 +34,7 @@
             </select>
         </div>
 
+        <!-- Main Login Info -->
         <div class="mb-3">
             <label class="form-label">Email (Username)</label>
             <input type="email" name="email" class="form-control" required>
@@ -47,9 +45,11 @@
             <input type="password" name="password" class="form-control" required>
         </div>
 
+
         <!-- Customer Fields -->
         <div id="customerFields" class="section">
             <h5 class="mt-4">Customer Info</h5>
+
             <div class="row">
                 <div class="col-md-6">
                     <label class="form-label">Name</label>
@@ -104,35 +104,39 @@
             </div>
         </div>
 
-<!-- Staff Fields -->
-<div id="staffFields" class="section">
-    <h5 class="mt-4">Staff Info</h5>
-    <div class="row">
-        <div class="col-md-6">
-            <label class="form-label">First Name</label>
-            <input type="text" name="staff_first" class="form-control">
+
+        <!-- Staff Fields -->
+        <div id="staffFields" class="section">
+            <h5 class="mt-4">Staff Info</h5>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">First Name</label>
+                    <input type="text" name="staff_first" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Last Name</label>
+                    <input type="text" name="staff_last" class="form-control">
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="staff_dob" class="form-control">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Airline Name</label>
+                    <input type="text" name="airline_name" class="form-control">
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <label class="form-label">Last Name</label>
-            <input type="text" name="staff_last" class="form-control">
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6">
-            <label class="form-label">Date of Birth</label>
-            <input type="date" name="staff_dob" class="form-control">
-        </div>
-        <div class="col-md-6">
-            <label class="form-label">Airline Name</label>
-            <input type="text" name="airline_name" class="form-control" required>
-        </div>
-    </div>
-</div>
 
 
         <div class="text-center mt-4">
             <input type="submit" value="Register" class="btn btn-primary">
         </div>
+
     </form>
 
     <div class="text-center mt-3">
@@ -140,23 +144,25 @@
     </div>
 </div>
 
+
 <script>
-    function toggleFields() {
-        const role = document.getElementById("role").value;
-    
-        document.getElementById("customerFields").style.display = (role === "customer") ? "block" : "none";
-        document.getElementById("staffFields").style.display = (role === "staff") ? "block" : "none";
-    
-        const customerInputs = document.querySelectorAll("#customerFields input");
-        const staffInputs = document.querySelectorAll("#staffFields input");
-    
-        customerInputs.forEach(input => input.disabled = (role !== "customer"));
-        staffInputs.forEach(input => input.disabled = (role !== "staff"));
-    }
-    
-    // Run on page load to show the correct section if form was repopulated
-    window.onload = toggleFields;
-    </script>
-    
-</body>
-</html>
+function toggleFields() {
+    const role = document.getElementById("role").value;
+
+    document.getElementById("customerFields").style.display =
+        (role === "customer") ? "block" : "none";
+
+    document.getElementById("staffFields").style.display =
+        (role === "staff") ? "block" : "none";
+
+    document.querySelectorAll("#customerFields input")
+        .forEach(i => i.disabled = (role !== "customer"));
+
+    document.querySelectorAll("#staffFields input")
+        .forEach(i => i.disabled = (role !== "staff"));
+}
+
+window.onload = toggleFields;
+</script>
+
+{% endblock %}

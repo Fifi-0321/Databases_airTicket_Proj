@@ -55,7 +55,7 @@ INSERT INTO airline_staff
 -- ===== CEAir =====
 ('ce_admin@ceair.com', 'a0cf0de477f03ca38ae4568115907412', 'Chen', 'Liang', '1985-02-11', 'CEAir'),
 ('ce_ops@ceair.com',   'a0cf0de477f03ca38ae4568115907412', 'Mei', 'Zhang', '1993-07-21', 'CEAir'),
-('qw2440@nyu.edu', 'a0cf0de477f03ca38ae4568115907412', 'Richael', 'Richter', '2004-10-28', 'CEAir'),
+('yw6945@nyu.edu', 'a0cf0de477f03ca38ae4568115907412', 'Yufei', 'Wu', '2004-03-21', 'CEAir'),
 
 -- ===== Lufthansa =====
 ('lh_admin@lufthansa.com', 'a0cf0de477f03ca38ae4568115907412', 'Hans', 'Müller', '1978-11-14', 'Lufthansa'),
@@ -108,6 +108,7 @@ INSERT INTO `airplane` (`airline_name`, `airplane_id`, `seats`) VALUES
 -- CEAir
 ('CEAir', 1, 300),
 ('CEAir', 1234, 200),
+('CEAir', 3, 1),
 
 -- Lufthansa
 ('Lufthansa', 101, 250),
@@ -375,10 +376,11 @@ VALUES
 -- ===== CEAir =====
 ('CEAir', 2001, 'PVG', '2025-07-02 09:00:00', 'SHA', '2025-07-02 10:00:00', 300, 'upcoming', 1),
 ('CEAir', 2002, 'PVG', '2025-09-15 13:30:00', 'PKX', '2025-09-15 17:10:00', 1200, 'upcoming', 1234),
-('CEAir', 2003, 'SHA', '2025-11-01 06:45:00', 'FRA', '2025-11-01 17:00:00', 5200, 'upcoming', 1234),
+('CEAir', 2003, 'SHA', '2025-12-01 06:45:00', 'FRA', '2025-11-01 17:00:00', 5200, 'upcoming', 1234),
 ('CEAir', 2004, 'PEK', '2025-12-20 21:10:00', 'PVG', '2025-12-20 23:40:00', 600, 'delayed', 1),
 ('CEAir', 129, 'PVG', '2025-06-13 00:05:00', 'FRA', '2025-06-13 12:05:00', 5050, 'upcoming', 1234),
 ('CEAir', 1234, 'PVG', '2025-05-10 10:00:00', 'PEK', '2025-05-10 12:30:00', 800, 'upcoming', 1),
+('CEAir', 4321, 'PEK', '2025-12-10 09:00:00', 'FRA', '2025-12-11 12:30:00', 8000, 'upcoming', 3),
 
 -- ===== Lufthansa =====
 ('Lufthansa', 321, 'PVG', '2025-07-11 10:00:00', 'MUC', '2025-07-11 22:00:00', 15000, 'upcoming', 909),
@@ -433,7 +435,6 @@ INSERT INTO permission (username, permission_type) VALUES
 -- ===== CEAir =====
 ('ce_admin@ceair.com', 'Admin'),
 ('ce_ops@ceair.com',   'Operator'),
-('qw2440@nyu.edu',      'Admin'),
 
 -- ===== Lufthansa =====
 ('lh_admin@lufthansa.com', 'Admin'),
@@ -480,8 +481,8 @@ CREATE TABLE `purchases` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 INSERT INTO purchases (ticket_id, customer_email, booking_agent_id, purchase_date) VALUES
-(1,  'ml9007@nyu.edu',             2,   '2025-05-05'),
-(2,  'sarah.jones@example.com',    NULL,'2025-05-10'),
+(1,  'ml9007@nyu.edu',             2,   '2025-10-05'),
+(2,  'sarah.jones@example.com',    NULL,'2025-11-10'),
 (3,  'emma.wilson@gmail.com',      1,   '2025-05-12'),
 (4,  'yuki.tanaka@gmail.com',      NULL,'2025-05-15'),
 (5,  'kevin.brown@yahoo.com',      4,   '2025-05-18'),
@@ -490,8 +491,19 @@ INSERT INTO purchases (ticket_id, customer_email, booking_agent_id, purchase_dat
 (8,  'lucas.martin@gmail.com',     NULL,'2025-03-25'),
 (9,  'hassan.ali@protonmail.com',  6,   '2025-03-10'),
 (10, 'sofia.romero@hotmail.com',   NULL,'2025-03-02'),
-(11,'michael.chen@outlook.com',    5,   '2025-02-28'),
-(12,'ml9007@nyu.edu',              NULL,'2025-02-22');
+(11, 'michael.chen@outlook.com',   5,   '2025-02-28'),
+(12, 'ml9007@nyu.edu',             NULL,'2025-02-22'),
+(13, 'ml9007@nyu.edu',             2,   '2025-06-01'),
+(14, 'sarah.jones@example.com',    NULL,'2025-06-03'),
+(15, 'emma.wilson@gmail.com',      1,   '2025-07-01'),
+(16, 'kevin.brown@yahoo.com',      NULL,'2025-09-05'),
+(17, 'hassan.ali@protonmail.com',  6,   '2025-10-20'),
+(18, 'lucas.martin@gmail.com',     NULL,'2025-10-22'),
+(19, 'yuki.tanaka@gmail.com',      2,   '2025-08-01'),
+(20, 'qw2440@nyu.edu',             NULL,'2025-12-03'),
+(21, 'jac32@nyu.edu',              5,   '2025-11-30'),
+(22, 'michael.chen@outlook.com',   NULL,'2025-11-12'),
+(23, 'yuki.tanaka@gmail.com',      NULL,'2025-08-26');
 
 -- --------------------------------------------------------
 
@@ -521,7 +533,18 @@ INSERT INTO ticket (ticket_id, airline_name, flight_num) VALUES
 (9, 'AirChina', 3001),
 (10, 'Delta', 4001),
 (11, 'United', 5001),
-(12, 'Emirates', 8001);
+(12, 'Emirates', 8001),
+(13, 'CEAir', 2001),
+(14, 'CEAir', 2001),
+(15, 'CEAir', 2002),
+(16, 'CEAir', 2002),
+(17, 'CEAir', 2003),
+(18, 'CEAir', 2003),
+(19, 'CEAir', 2004),
+(20, 'CEAir', 2004),
+(21, 'CEAir', 129),
+(22, 'CEAir', 1234),
+(23, 'CEAir', 4321);
 
 --
 -- Export the index of the table

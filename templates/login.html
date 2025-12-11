@@ -1,41 +1,62 @@
-<!-- login.html -->
 {% extends "base.html" %}
 {% block content %}
-<div class="card mx-auto shadow p-4" style="max-width: 500px;">
-    <h2 class="text-center mb-4">Login</h2>
 
-    <form method="post" action="{{ url_for('loginAuth') }}">
-        <div class="mb-3">
-            <label for="role" class="form-label">Role</label>
-            <select name="role" id="role" class="form-select">
-                <option value="customer">Customer</option>
-                <option value="agent">Booking Agent</option>
-                <option value="staff">Airline Staff</option>
-            </select>
-        </div>
+<style>
+    .section { display: none; margin-top: 15px; }
+    .form-label { margin-top: 10px; }
+</style>
 
-        <div class="mb-3">
-            <label for="email" class="form-label">Email/Username</label>
-            <input type="text" name="email" id="email" class="form-control" required>
-        </div>
+<div class="container mt-5" style="max-width: 1450px;">
 
-        <div class="mb-3">
-            <label for="password" class="form-label">Password</label>
-            <input type="password" name="password" id="password" class="form-control" required>
-        </div>
+    <!-- Title OUTSIDE the white box -->
+    <h2 class="mb-4 text-center">Login to AirLinkSQL</h2>
 
-        {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
+    <!-- White Card - contains only form -->
+    <div class="card p-4 shadow-sm" style="border-radius: 12px; background: white;">
 
-        <div class="d-grid">
-            <button type="submit" class="btn btn-primary">Login</button>
-        </div>
-    </form>
+        <form method="post" action="{{ url_for('loginAuth') }}" class="form-card">
 
-    <div class="text-center mt-3">
-        <a href="{{ url_for('index') }}">Back to Home</a>
+            <!-- Role -->
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select">
+                    <option value="customer">Customer</option>
+                    <option value="agent">Booking Agent</option>
+                    <option value="staff">Airline Staff</option>
+                </select>
+            </div>
+
+            <!-- Email -->
+            <div class="mb-3">
+                <label class="form-label">Email / Username</label>
+                <input type="text" name="email" class="form-control" required>
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+
+            {% if error %}
+            <div class="alert alert-danger text-center">{{ error }}</div>
+            {% endif %}
+
+            <div class="text-center mt-3">
+                <button class="btn btn-primary">Login</button>
+            </div>
+
+        </form>
+
+    </div> <!-- END WHITE CARD -->
+
+    <!-- Back to Home OUTSIDE white box -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+            Back to Home
+        </a>
     </div>
-</div>
-{% endblock %}
 
+</div>
+
+{% endblock %}
